@@ -40,6 +40,10 @@ public:
             return Token(TokenType::SEMICOLON, std::string(1, getChar()), line, column - 1);
         }
 
+        if (currentChar == '=') {
+            return Token(TokenType::OPERATOR_EQUAL, std::string(1, getChar()), line, column - 1);
+        }
+
         // Si no se reconoce el carácter, es un error.
         return Token(TokenType::ERROR, std::string(1, getChar()), line, column++);
     }
@@ -111,12 +115,14 @@ public:
             lexeme += getChar();
         }
 
-        if (keywords.count(lexeme)) {
-            return Token(TokenType::KEYWORD, lexeme, line, startColumn);
+        auto it = keywordMap.find(lexeme);
+        if (it != keywordMap.end()) {
+            return Token(it->second, lexeme, line, startColumn);
         }
 
         return Token(TokenType::IDENTIFIER, lexeme, line, startColumn);
     }
+
 
     Token number() {
         int startColumn = column;
