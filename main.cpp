@@ -1,7 +1,10 @@
 #include "scanner.h"
+#include <fstream>
 
 int main() {
-    std::string sourceCode = "int x = 10; while (x > 0) { x = x - 1; }";
+    std::ifstream inputFile("input.txt");
+    std::string sourceCode((std::istreambuf_iterator<char>(inputFile)), std::istreambuf_iterator<char>());
+
     Scanner s(sourceCode);
     s.scan();
     return 0;

@@ -8,11 +8,16 @@ enum class TokenType {
     KEYWORD,
     OPERATOR,
     END_OF_FILE,
+    STRING,
+    SEMICOLON,
+    COLON,
     ERROR
 };
 
 const std::unordered_set<std::string> keywords = {
-    "if", "else", "while", "return", "int", "float", "void"
+    "array", "boolean", "char", "else", "false", "for", "function", 
+    "if", "integer", "map", "print", "return", "string", "true", 
+    "void", "while"
 };
 
 const std::unordered_set<char> operators = {
@@ -27,6 +32,7 @@ struct Token {
 
     Token(TokenType type, const std::string& value, int line, int column)
         : type(type), value(value), line(line), column(column) {}
+        
     void print() const {
         std::cout << "TOKEN VALUE: '" << value << "' ";
         switch (type) {
@@ -45,6 +51,16 @@ struct Token {
             case TokenType::OPERATOR:
                 std::cout << " TOKEN TYPE: OPERATOR"<< " (Line " <<line << ", Column " << column << ")\n";
                 break;
+            case TokenType::STRING:
+            // If string contains \n it will go to next line xd
+                std::cout << " TOKEN TYPE: STRING"<< " (Line " <<line << ", Column " << column << ")\n";
+                break;
+            case TokenType::SEMICOLON:
+                std::cout << " TOKEN TYPE: SEMICOLON"<< " (Line " <<line << ", Column " << column << ")\n";
+                break;
+            case TokenType::COLON:
+                std::cout << " TOKEN TYPE: COLON"<< " (Line " <<line << ", Column " << column << ")\n";
+                break;          
             case TokenType::END_OF_FILE:
                 std::cout << " END OF TOKENS"<< " (Line " <<line << ", Column " << column << ")\n";
                 break;

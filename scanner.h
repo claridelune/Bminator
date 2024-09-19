@@ -24,8 +24,20 @@ public:
             return number();
         }
 
+        if (isQuotationMark(currentChar)){
+            return string();
+        }
+
         if (operators.count(currentChar)) {
             return makeOperator();
+        }
+
+        if (currentChar == ':') {
+            return Token(TokenType::COLON, std::string(1, getChar()), line, column - 1);
+        }
+
+        if (currentChar == ';') {
+            return Token(TokenType::SEMICOLON, std::string(1, getChar()), line, column - 1);
         }
 
         // Si no se reconoce el carácter, es un error.
@@ -75,6 +87,10 @@ public:
         return std::isalpha(c) || c == '_';
     }
 
+    bool isQuotationMark(char c) const {
+        return c == '\"';
+    }
+
     bool isDigit(char c) const {
         return std::isdigit(c);
     }
@@ -111,6 +127,54 @@ public:
         }
 
         return Token(TokenType::INT, lexeme, line, startColumn);
+    }
+
+    Token string() {
+        int startColumn = column;
+        std::string lexeme;
+
+        getChar();
+
+        while (!isAtEOF() && peekChar() != '\"') {
+            char currentChar = getChar();
+
+            if (currentChar == '\n') {
+                return Token(TokenType::ERROR, "Unterminated string", line, startColumn);
+            }
+
+            // Manejar caracteres de escape
+            if (currentChar == '\\') {
+                if (!isAtEOF()) {
+                    char nextChar = getChar();
+                    switch (nextChar) {
+                        case 'n':
+                            lexeme += '\n';
+                            break;
+                        case 't':
+                            lexeme += '\t';
+                            break;
+                        case '\\':
+                        case '\"':
+                            lexeme += nextChar;
+                            break;
+                        default:
+                            lexeme += '\\';
+                            lexeme += nextChar;
+                            break;
+                    }
+                }
+            } else {
+                lexeme += currentChar;
+            }
+        }
+
+        if (isAtEOF()) {
+            return Token(TokenType::ERROR, "Unterminated string", line, startColumn);
+        }
+
+        getChar();
+        // Returns only string content without quotation marks
+        return Token(TokenType::STRING, lexeme, line, startColumn);
     }
 
     Token makeOperator() {
