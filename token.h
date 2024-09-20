@@ -22,12 +22,28 @@ enum class TokenType {
     KEYWORD_TRUE,
     KEYWORD_VOID,
     KEYWORD_WHILE,
-    OPERATOR,
+    OPERATOR_PLUS,
+    OPERATOR_MINUS,
+    OPERATOR_MULTIPLY,
+    OPERATOR_DIVIDE,
+    OPERATOR_NOT,
     OPERATOR_EQUAL,
+    OPERATOR_EQUAL_EQUAL,
+    OPERATOR_LESS_EQUAL,
+    OPERATOR_GREATER_EQUAL,
+    OPERATOR_NOT_EQUAL,
+    OPERATOR_LESS_THAN,
+    OPERATOR_GREATER_THAN,
     END_OF_FILE,
     STRING,
     SEMICOLON,
     COLON,
+    LEFT_BRACE,
+    RIGHT_BRACE,
+    LEFT_BRACKET,
+    RIGHT_BRACKET,
+    LEFT_PARENTHESIS,
+    RIGHT_PARENTHESIS,
     ERROR
 };
 
@@ -48,17 +64,32 @@ const std::map<std::string, TokenType> keywordMap = {
     {"true", TokenType::KEYWORD_TRUE},
     {"void", TokenType::KEYWORD_VOID},
     {"while", TokenType::KEYWORD_WHILE},
-    {"=", TokenType::OPERATOR_EQUAL}
-};
 
-const std::unordered_set<std::string> keywords = {
-    "array", "boolean", "char", "else", "false", "for", "function", 
-    "if", "integer", "map", "print", "return", "string", "true", 
-    "void", "while"
-};
+    // operadores
+    {"!", TokenType::OPERATOR_NOT},
+    {"+", TokenType::OPERATOR_PLUS},
+    {"-", TokenType::OPERATOR_MINUS},
+    {"*", TokenType::OPERATOR_MULTIPLY},
+    {"/", TokenType::OPERATOR_DIVIDE},
 
-const std::unordered_set<char> operators = {
-    '+', '-', '*', '/', '<', '>', '!'
+    {"=", TokenType::OPERATOR_EQUAL},
+    {"==", TokenType::OPERATOR_EQUAL_EQUAL},
+    {"<=", TokenType::OPERATOR_LESS_EQUAL},
+    {">=", TokenType::OPERATOR_GREATER_EQUAL},
+    {"!=", TokenType::OPERATOR_NOT_EQUAL},
+    {"<", TokenType::OPERATOR_LESS_THAN},
+    {">", TokenType::OPERATOR_GREATER_THAN},
+
+    // delimitadores
+    {";", TokenType::SEMICOLON},
+    {":", TokenType::COLON},
+    {"{", TokenType::LEFT_BRACE},
+    {"}", TokenType::RIGHT_BRACE},
+    {"[", TokenType::LEFT_BRACKET},
+    {"]", TokenType::RIGHT_BRACKET},
+    {"(", TokenType::LEFT_PARENTHESIS},
+    {")", TokenType::RIGHT_PARENTHESIS},
+
 };
 
 struct Token {
@@ -91,12 +122,31 @@ struct Token {
             {TokenType::KEYWORD_TRUE, "RK_TRUE"},
             {TokenType::KEYWORD_VOID, "RK_VOID"},
             {TokenType::KEYWORD_WHILE, "RK_WHILE"},
-            {TokenType::OPERATOR, "OPERATOR"},
+
+            {TokenType::OPERATOR_NOT, "OPERATOR_NOT"},
+            {TokenType::OPERATOR_PLUS, "OPERATOR_PLUS"},
+            {TokenType::OPERATOR_MINUS, "OPERATOR_MINUS"},
+            {TokenType::OPERATOR_MULTIPLY, "OPERATOR_MULTIPLY"},
+            {TokenType::OPERATOR_DIVIDE, "OPERATOR_DIVIDE"},
+
             {TokenType::OPERATOR_EQUAL, "OPERATOR_EQUAL"},
+            {TokenType::OPERATOR_EQUAL_EQUAL, "OPERATOR_EQUAL_EQUAL"},
+            {TokenType::OPERATOR_LESS_EQUAL, "OPERATOR_LESS_EQUAL"},
+            {TokenType::OPERATOR_GREATER_EQUAL, "OPERATOR_GREATER_EQUAL"},
+            {TokenType::OPERATOR_LESS_THAN, "OPERATOR_LESS_THAN"},
+            {TokenType::OPERATOR_GREATER_THAN, "OPERATOR_GREATER_THAN"},
+            {TokenType::OPERATOR_NOT_EQUAL, "OPERATOR_NOT_EQUAL"},
+
             {TokenType::END_OF_FILE, "END_OF_TOKENS"},
             {TokenType::STRING, "RK_STRING"},
             {TokenType::SEMICOLON, "SEMICOLON"},
             {TokenType::COLON, "COLON"},
+            {TokenType::LEFT_BRACE, "LEFT_BRACE"},
+            {TokenType::RIGHT_BRACE, "RIGHT_BRACE"},
+            {TokenType::LEFT_BRACKET, "LEFT_BRACKET"},
+            {TokenType::RIGHT_BRACKET, "RIGHT_BRACKET"},
+            {TokenType::LEFT_PARENTHESIS, "LEFT_PARENTHESIS"},
+            {TokenType::RIGHT_PARENTHESIS, "RIGHT_PARENTHESIS"},
             {TokenType::ERROR, "ERROR"}
         };
 

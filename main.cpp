@@ -7,5 +7,11 @@ int main() {
 
     Scanner s(sourceCode);
     s.scan();
+
+    const std::vector<Token>& tokens = s.getTokens();
+
+    for (auto token : tokens) {
+        token.print();
+    }
     return 0;
 }

@@ -2,4 +2,9 @@ x: integer;
 y: integer = -123;
 b: boolean = false;
 c: char    = 'q';
+//asldk
 s: string  = "hello bminor\n";
+
+if(c=='a')
+{
+}

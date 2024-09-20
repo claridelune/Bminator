@@ -1,17 +1,18 @@
 #include <string>
+#include <vector>
 
 #include "token.h"
-
-//agregar una lista de TOKENS -> imprimir desde esa lista
-//leer archivo y generar buffer de lectura
-//SEPARATOR
 
 class Scanner {
 public:
     Scanner(const std::string& source) : source(source), pos(0), line(1), column(1) {}
 
+    const std::vector<Token>& getTokens() const {
+        return tokens;
+    }
+
     Token getToken() {
-        skipWhitespace();
+        skipWhitespaceAndComments();
         if (isAtEOF()) return Token(TokenType::END_OF_FILE, "", line, column);
 
         char currentChar = peekChar();
@@ -28,8 +29,12 @@ public:
             return string();
         }
 
-        if (operators.count(currentChar)) {
-            return makeOperator();
+        if (isOperatorStart(currentChar)) {
+            return extractOperator();
+        }
+
+        if (isDelimiter(currentChar)) {
+            return extractDelimiter();
         }
 
         if (currentChar == ':') {
@@ -51,10 +56,10 @@ public:
     void scan() {
         Token token = getToken();
         while (token.type != TokenType::END_OF_FILE) {
-            token.print();
+            tokens.push_back(token);
             token = getToken();
         }
-        token.print();
+        tokens.push_back(token);
     }
 
   private:
@@ -62,6 +67,7 @@ public:
     size_t pos;
     int line;
     int column;
+    std::vector<Token> tokens;
 
     char peekChar() {
         return source[pos];
@@ -77,12 +83,26 @@ public:
         return pos >= source.length();
     }
 
-    void skipWhitespace() {
-        while (!isAtEOF() && isWhitespace(peekChar())) {
-            if (peekChar() == '\n') {
-                line++;
-                column = 1;
+    void skipWhitespaceAndComments() {
+        while (!isAtEOF()) {
+            char currentChar = peekChar();
+            if (isWhitespace(currentChar)) {
+                if (peekChar() == '\n') {
+                    line++;
+                    column = 1;
+                }
+                getChar();
+            } else if (currentChar == '/' && source[pos + 1] == '/') {
+                skipComment();
             }
+            else {
+                break;
+            }
+        }
+    }
+
+    void skipComment() {
+        while (!isAtEOF() && peekChar() != '\n') {
             getChar();
         }
     }
@@ -105,6 +125,14 @@ public:
 
     bool isWhitespace(char c) const {
         return std::isspace(c);
+    }
+
+    bool isOperatorStart(char c) const {
+        return c == '+' || c == '-' || c == '*' || c == '/' || c == '<' || c == '>' || c == '=' || c == '!';
+    }
+
+    bool isDelimiter(char c) const {
+        return c == '{' || c == '}' || c == '[' || c == ']' || c == '(' || c == ')';
     }
 
     Token identifierOrKeyword() {
@@ -183,8 +211,32 @@ public:
         return Token(TokenType::STRING, lexeme, line, startColumn);
     }
 
-    Token makeOperator() {
-        char op = getChar();
-        return Token(TokenType::OPERATOR, std::string(1, op), line, column - 1);
+    Token extractOperator() {
+        int startColumn = column;
+        char firstChar = getChar();
+        std::string lexeme(1, firstChar);
+        if (!isAtEOF() && (firstChar == '=' || firstChar == '<' || firstChar == '>' || firstChar == '!') && peekChar() == '=') {
+            lexeme += getChar();
+        }
+
+        auto it = keywordMap.find(lexeme);
+        if (it != keywordMap.end()) {
+            return Token(it->second, lexeme, line, startColumn);
+        }
+
+        return Token(TokenType::ERROR, lexeme, line, startColumn);
+    }
+
+    Token extractDelimiter() {
+        char currentChar = getChar();
+        switch (currentChar) {
+            case '{': return Token(TokenType::LEFT_BRACE, "{", line, column - 1);
+            case '}': return Token(TokenType::RIGHT_BRACE, "}", line, column - 1);
+            case '[': return Token(TokenType::LEFT_BRACKET, "[", line, column - 1);
+            case ']': return Token(TokenType::RIGHT_BRACKET, "]", line, column - 1);
+            case '(': return Token(TokenType::LEFT_PARENTHESIS, "(", line, column - 1);
+            case ')': return Token(TokenType::RIGHT_PARENTHESIS, ")", line, column - 1);
+            default:  return Token(TokenType::ERROR, std::string(1, currentChar), line, column - 1);
+        }
     }
 };
