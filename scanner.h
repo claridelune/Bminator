@@ -29,6 +29,10 @@ public:
             return string();
         }
 
+        if (isSingleQuote(currentChar)) {
+            return character();
+        }
+
         if (isOperatorStart(currentChar)) {
             return extractOperator();
         }
@@ -115,6 +119,10 @@ public:
         return c == '\"';
     }
 
+    bool isSingleQuote(char c) const {
+        return c == '\'';
+    }
+
     bool isDigit(char c) const {
         return std::isdigit(c);
     }
@@ -178,25 +186,7 @@ public:
 
             // Manejar caracteres de escape
             if (currentChar == '\\') {
-                if (!isAtEOF()) {
-                    char nextChar = getChar();
-                    switch (nextChar) {
-                        case 'n':
-                            lexeme += '\n';
-                            break;
-                        case 't':
-                            lexeme += '\t';
-                            break;
-                        case '\\':
-                        case '\"':
-                            lexeme += nextChar;
-                            break;
-                        default:
-                            lexeme += '\\';
-                            lexeme += nextChar;
-                            break;
-                    }
-                }
+                lexeme += handleEscapeSequence();
             } else {
                 lexeme += currentChar;
             }
@@ -209,6 +199,36 @@ public:
         getChar();
         // Returns only string content without quotation marks
         return Token(TokenType::STRING, lexeme, line, startColumn);
+    }
+    
+    char handleEscapeSequence() {
+        char nextChar = getChar();
+        switch (nextChar) {
+            case 'n': return '\n';
+            case 't': return '\t';
+            case '\\': case '\"': case '\'': return nextChar;
+            default: return '\\';
+        }
+    }
+
+    Token character() {
+        int startColumn = column;
+        getChar();
+        char charValue;
+
+        if (peekChar() == '\\') {
+            getChar();
+            charValue = handleEscapeSequence();
+        } else {
+            charValue = getChar();
+        }
+
+        if (peekChar() != '\'') {
+            return Token(TokenType::ERROR, "Unterminated character literal", line, startColumn);
+        }
+        getChar();
+        
+        return Token(TokenType::CHAR, std::string(1, charValue), line, startColumn);
     }
 
     Token extractOperator() {

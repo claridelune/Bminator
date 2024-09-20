@@ -6,6 +6,7 @@
 enum class TokenType {
     IDENTIFIER,
     INT,
+    CHAR,
     KEYWORD_ARRAY,
     KEYWORD_BOOLEAN,
     KEYWORD_CHAR,
@@ -106,9 +107,10 @@ struct Token {
         static std::map<TokenType, std::string> tokenTypeMap = {
             {TokenType::IDENTIFIER, "IDENTIFIER"},
             {TokenType::INT, "RK_INT"},
+            {TokenType::CHAR, "RK_CHAR"},
             {TokenType::KEYWORD_ARRAY, "RK_ARRAY"},
             {TokenType::KEYWORD_BOOLEAN, "RK_BOOLEAN"},
-            {TokenType::KEYWORD_CHAR, "RK_CHAR"},
+            {TokenType::KEYWORD_CHAR, "RK_KEYWORD_CHAR"},
             {TokenType::KEYWORD_ELSE, "RK_ELSE"},
             {TokenType::KEYWORD_FALSE, "RK_FALSE"},
             {TokenType::KEYWORD_FOR, "RK_FOR"},
