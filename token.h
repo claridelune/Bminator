@@ -49,7 +49,8 @@ enum class TokenType {
     RIGHT_BRACKET,
     LEFT_PARENTHESIS,
     RIGHT_PARENTHESIS,
-    ERROR
+    ERROR,
+    EOF_TOKEN
 };
 
 const std::map<std::string, TokenType> keywordMap = {
