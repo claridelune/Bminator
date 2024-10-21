@@ -16,7 +16,7 @@ private:
     int current;
 
     bool isAtEnd() {
-        return current >= tokens.size() || tokens[current].type == TokenType::EOF_TOKEN;
+        return current >= tokens.size() || tokens[current].type == TokenType::END_OF_FILE;
     }
 
     Token peek() {
@@ -52,8 +52,22 @@ private:
 
     /* Program -> Declaration ProgramPrime */
     bool program() {
-        declaration();
-        programPrime();
+        return declaration() && programPrime();
+    }
+
+    /* Declaration -> */
+    bool declaration(){
+        return 0;
+    }
+
+    /* ExprList -> */
+    bool exprList(){
+        return 0;
+    }
+
+    /* Expression -> */
+    bool expression(){
+        return 0;
     }
 
     /* ProgramPrime -> Declaration ProgramPrime */
@@ -81,14 +95,14 @@ private:
 
     /* Parentheses -> ( ExprList ) | epsilon */
     bool parentheses() {
-        if (match(TokenType::LEFT_PAREN)) {
-            consume(TokenType::LEFT_PAREN, "Se esperaba '(' al comienzo de la lista de expresiones.");
+        if (match(TokenType::LEFT_PARENTHESIS)) {
+            consume(TokenType::LEFT_PARENTHESIS, "Se esperaba '(' al comienzo de la lista de expresiones.");
             
             if (!exprList()) {
                 return false;  
             }
 
-            consume(TokenType::RIGHT_PAREN, "Se esperaba ')' después de la lista de expresiones.");
+            consume(TokenType::RIGHT_PARENTHESIS, "Se esperaba ')' después de la lista de expresiones.");
         }
         return true;  
     }
@@ -103,11 +117,11 @@ private:
             return factorPrime();  
         }
         
-        if (match(TokenType::LEFT_PAREN)) {
+        if (match(TokenType::LEFT_PARENTHESIS)) {
             if (!expression()) {
                 return false;  
             }
-            consume(TokenType::RIGHT_PAREN, "Se esperaba ')' después de la expresión.");
+            consume(TokenType::RIGHT_PARENTHESIS, "Se esperaba ')' después de la expresión.");
             return true;  
         }
 
@@ -116,10 +130,10 @@ private:
 
     /* Literal -> IntegerLiteral | CharLiteral | BooleanLiteral | StringLiteral */
     bool literal() {
-        return match(TokenType::INTEGER_LITERAL) ||
-            match(TokenType::CHAR_LITERAL) ||
-            match(TokenType::BOOLEAN_LITERAL) ||
-            match(TokenType::STRING_LITERAL);
+        return match(TokenType::LITERAL_INT) ||
+            match(TokenType::LITERAL_CHAR) ||
+            match(TokenType::KEYWORD_FALSE) || match(TokenType::KEYWORD_TRUE) ||
+            match(TokenType::LITERAL_STRING);
     }
 
     /* FactorPrime -> [ Expression ] FactorPrime | epsilon */

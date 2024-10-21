@@ -1,4 +1,7 @@
 #include "scanner.h"
+#include "parser.h"
+#include "token.h"
+
 #include <fstream>
 
 int main() {
@@ -13,5 +16,7 @@ int main() {
     for (auto token : tokens) {
         token.print();
     }
+
+    Parser p(tokens);
     return 0;
 }

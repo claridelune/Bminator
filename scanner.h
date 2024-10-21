@@ -168,7 +168,7 @@ public:
             lexeme += getChar();
         }
 
-        return Token(TokenType::INT, lexeme, line, startColumn);
+        return Token(TokenType::LITERAL_INT, lexeme, line, startColumn);
     }
 
     Token string() {
@@ -198,7 +198,7 @@ public:
 
         getChar();
         // Returns only string content without quotation marks
-        return Token(TokenType::STRING, lexeme, line, startColumn);
+        return Token(TokenType::LITERAL_STRING, lexeme, line, startColumn);
     }
     
     char handleEscapeSequence() {
@@ -228,7 +228,7 @@ public:
         }
         getChar();
         
-        return Token(TokenType::CHAR, std::string(1, charValue), line, startColumn);
+        return Token(TokenType::LITERAL_CHAR, std::string(1, charValue), line, startColumn);
     }
 
     Token extractOperator() {
