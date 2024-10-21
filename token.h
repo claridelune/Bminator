@@ -39,6 +39,9 @@ enum class TokenType {
     OPERATOR_NOT_EQUAL,
     OPERATOR_LESS_THAN,
     OPERATOR_GREATER_THAN,
+    OPERATOR_OR,
+    OPERATOR_AND,
+    OPERATOR_MOD,
     END_OF_FILE,
     STRING,
     SEMICOLON,
@@ -50,7 +53,8 @@ enum class TokenType {
     LEFT_PARENTHESIS,
     RIGHT_PARENTHESIS,
     ERROR,
-    EOF_TOKEN
+    EOF_TOKEN,
+    COMMA
 };
 
 const std::map<std::string, TokenType> keywordMap = {
@@ -97,6 +101,10 @@ const std::map<std::string, TokenType> keywordMap = {
     {"(", TokenType::LEFT_PARENTHESIS},
     {")", TokenType::RIGHT_PARENTHESIS},
 
+    // operators
+    {"||", TokenType::OPERATOR_OR},
+    {"&&", TokenType::OPERATOR_AND},
+    {",", TokenType::COMMA}
 };
 
 struct Token {

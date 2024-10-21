@@ -53,6 +53,14 @@ public:
             return Token(TokenType::OPERATOR_EQUAL, std::string(1, getChar()), line, column - 1);
         }
 
+        if (currentChar == '%') {
+            return Token(TokenType::OPERATOR_MOD, std::string(1, getChar()), line, column - 1);
+        }
+
+        if (currentChar == ',') {
+            return Token(TokenType::COMMA, std::string(1, getChar()), line, column - 1);
+        }
+
         // Si no se reconoce el carácter, es un error.
         return Token(TokenType::ERROR, std::string(1, getChar()), line, column++);
     }
@@ -136,7 +144,7 @@ public:
     }
 
     bool isOperatorStart(char c) const {
-        return c == '+' || c == '-' || c == '*' || c == '/' || c == '<' || c == '>' || c == '=' || c == '!';
+        return c == '+' || c == '-' || c == '*' || c == '/' || c == '<' || c == '>' || c == '=' || c == '!' || c == '|' || c == '&';
     }
 
     bool isDelimiter(char c) const {
@@ -235,7 +243,7 @@ public:
         int startColumn = column;
         char firstChar = getChar();
         std::string lexeme(1, firstChar);
-        if (!isAtEOF() && (firstChar == '=' || firstChar == '<' || firstChar == '>' || firstChar == '!') && peekChar() == '=') {
+        if (!isAtEOF() && (firstChar == '=' || firstChar == '<' || firstChar == '>' || firstChar == '!' || firstChar == '|' || firstChar == '&') && peekChar() == '=') {
             lexeme += getChar();
         }
 

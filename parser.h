@@ -8,7 +8,12 @@ public:
 
     // Esto se llama desde el main
     void parse() {
-        program();
+        if(program()){
+            std::cout << "Input belongs to grammar\n";
+        }
+        else{
+            std::cout << "Input does not belong to grammar\n";
+        }
     }
 
 private:
@@ -55,19 +60,118 @@ private:
         return declaration() && programPrime();
     }
 
-    /* Declaration -> */
-    bool declaration(){
-        return 0;
+    // ExprList -> Expression ExprListPrime
+    bool exprList() {
+        if (!expression()) {
+            return false;
+        }
+        return exprListPrime();
     }
 
-    /* ExprList -> */
-    bool exprList(){
-        return 0;
+    // ExprListPrime -> , ExprList
+    // ExprListPrime -> epsilon
+    bool exprListPrime() {
+        if (match(TokenType::COMMA)) {
+            if (!exprList()) {
+                return false;
+            }
+            return true;
+        }
+        return true;
     }
 
-    /* Expression -> */
-    bool expression(){
-        return 0;
+    /*  Expression -> Identifier = Expression
+        Expression -> OrExpr */
+    bool expression() {
+        if (match(TokenType::IDENTIFIER)) {
+            if (match(TokenType::OPERATOR_EQUAL)) {
+                if (!expression()) {
+                    throw std::runtime_error("Se esperaba una expresión después de '='.");
+                }
+                return true;
+            } else {
+                throw std::runtime_error("Se esperaba '=' después del identificador.");
+            }
+        }
+        return orExpr();
+    }
+
+    /* 
+    OrExpr -> AndExpr OrExprPrime
+    */
+    bool orExpr() {
+        if (!andExpr()) {
+            return false;
+        }
+        return orExprPrime();
+    }
+
+    /*
+    OrExprPrime -> || AndExpr OrExprPrime
+    OrExprPrime -> epsilon
+    */
+    bool orExprPrime() {
+        if (match(TokenType::OPERATOR_OR)) {
+            if (!andExpr()) {
+                throw std::runtime_error("Se esperaba una expresión después de '||'.");
+            }
+            return orExprPrime();
+        }
+        return true;
+    }
+
+    /*
+    AndExpr -> EqExpr AndExprPrime
+    */
+    bool andExpr() {
+        if (!eqExpr()) {
+            return false;
+        }
+
+        return andExprPrime();
+    }
+
+    /*
+    AndExprPrime -> && EqExpr AndExprPrime
+    AndExprPrime -> epsilon
+    */
+    bool andExprPrime() {
+        if (match(TokenType::OPERATOR_AND)) {
+            if (!eqExpr()) {
+                throw std::runtime_error("Se esperaba una expresión después de '&&'.");
+            }
+            return andExprPrime();
+        }
+
+        //epsilon
+        return true;
+    }
+
+    /*
+    MultOrDivOrMod -> * | / | %
+    */
+    bool multOrDivOrMod() {
+        if (match(TokenType::OPERATOR_MULTIPLY) || 
+            match(TokenType::OPERATOR_DIVIDE) || 
+            match(TokenType::OPERATOR_MOD)) {
+            return true;
+        }
+        return false;
+    }
+
+    /*
+    Unary -> ! Unary
+    Unary -> - Unary
+    Unary -> Factor
+    */
+    bool unary() {
+        if (match(TokenType::OPERATOR_NOT)) {  // `! Unary`
+            return unary();
+        } else if (match(TokenType::OPERATOR_MINUS)) {  // `- Unary`
+            return unary();
+        }
+
+        return factor();
     }
 
     /* ProgramPrime -> Declaration ProgramPrime */
@@ -92,6 +196,148 @@ private:
             check(TokenType::KEYWORD_STRING) ||
             check(TokenType::KEYWORD_VOID);
     }
+
+    /*
+    Term -> Unary TermPrime
+    */
+    bool term() {
+        if (!unary()) {
+            return false;
+        }
+        return termPrime();
+    }
+
+    /*
+    TermPrime -> MultOrDivOrMod Unary TermPrime
+    TermPrime -> epsilon
+    */
+    bool termPrime() {
+        if (multOrDivOrMod()) {
+            if (!unary()) {
+                return false; 
+            }
+
+            return termPrime();
+        }
+
+        return true;
+    }
+
+    /*
+    EqualOrDifferent -> ==
+    EqualOrDifferent -> !=
+    */
+    bool equalOrDifferent() {
+        if (match(TokenType::OPERATOR_EQUAL_EQUAL)) {
+            return true; 
+        }
+        if (match(TokenType::OPERATOR_NOT_EQUAL)) {
+            return true;
+        }
+        return false;
+    }
+
+    /*
+    EqExpr -> RelExpr EqExprPrime
+    */
+    bool eqExpr() {
+        if (!relExpr()) {
+            return false;
+        }
+        
+        return eqExprPrime();
+    }
+
+    /*
+    EqExprPrime -> EqualOrDifferent RelExpr EqExprPrime
+    EqExprPrime -> epsilon
+    */
+    bool eqExprPrime() {
+        if (equalOrDifferent()) {
+            if (!relExpr()) {
+                return false;
+            }
+            return eqExprPrime();
+        }
+        return true;
+    }
+
+    /*
+    GreaterOrLess -> <
+    GreaterOrLess -> >
+    GreaterOrLess -> <=
+    GreaterOrLess -> >=
+    */
+    bool greaterOrLess() {
+        if (match(TokenType::OPERATOR_LESS_THAN) ||
+            match(TokenType::OPERATOR_GREATER_THAN) ||
+            match(TokenType::OPERATOR_LESS_EQUAL) ||
+            match(TokenType::OPERATOR_GREATER_EQUAL)) {
+            return true;
+        }
+        return false;
+    }
+
+    /*
+    RelExpr -> Expr RelExprPrime
+    */
+    bool relExpr() {
+        if (!expr()) {
+            return false;
+        }
+        return relExprPrime();
+    }
+
+    /*
+    RelExprPrime -> GreaterOrLess Expr RelExprPrime
+    RelExprPrime -> epsilon
+    */
+    bool relExprPrime() {
+        if (greaterOrLess()) {
+            if (!expr()) {
+                return false;
+            }
+            return relExprPrime();
+        }
+        return true;
+    }
+
+    /*
+    SumOrRest -> +
+    SumOrRest -> -
+    */
+    bool sumOrRest() {
+        if (match(TokenType::OPERATOR_PLUS) || match(TokenType::OPERATOR_MINUS)) {
+            return true;
+        }
+        return false;
+    }
+
+    /*
+    Expr -> Term ExprPrime
+    */
+    bool expr() {
+        if (!term()) {
+            return false;
+        }
+        return exprPrime();
+    }
+
+    /*
+    ExprPrime -> SumOrRest Term ExprPrime
+    ExprPrime -> epsilon
+    */
+    bool exprPrime() {
+        if (sumOrRest()) {
+            if (!term()) {
+                return false;
+            }
+            return exprPrime();
+        }
+
+        return true;
+    }
+
 
     /* Parentheses -> ( ExprList ) | epsilon */
     bool parentheses() {
@@ -287,6 +533,7 @@ private:
         
         return true;
     }
+
     // StmtList -> Statement StmtListPrime
     bool stmtList() {
         if (!statement()) {
@@ -330,6 +577,70 @@ private:
             return typePrime();
         }
 
+        return true;
+    }
+
+    /*
+    Declaration -> Function
+    Declaration -> VarDecl
+    */
+    bool declaration() {
+        if (function()) {
+            return true;
+        }
+
+        if (varDecl()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /*
+    Function -> Type Identifier ( Params ) { StmtList }
+    */
+    bool function() {
+        if (type()) {
+            if (match(TokenType::IDENTIFIER)) {
+                consume(TokenType::LEFT_PARENTHESIS, "Se esperaba '(' al inicio de los parámetros.");
+                if (params()) {
+                    consume(TokenType::RIGHT_PARENTHESIS, "Se esperaba ')' al final de los parámetros.");
+                    consume(TokenType::LEFT_BRACE, "Se esperaba '{' al inicio del cuerpo de la función.");
+                    
+                    if (stmtList()) {
+                        consume(TokenType::RIGHT_BRACE, "Se esperaba '}' al final del cuerpo de la función.");
+                        return true;
+                    }
+                }
+            }
+            throw std::runtime_error("Error en la declaración de la función.");
+        }
+
+        return false;
+    }
+
+    /*
+    Params -> Type Identifier Params
+    Params -> , Params
+    Params -> epsilon
+    */
+    bool params() {
+        if (type()) {
+            if (match(TokenType::IDENTIFIER)) {
+                if (params()) {
+                    return true;
+                }
+                return false;
+            }
+            throw std::runtime_error("Se esperaba un identificador después del tipo.");
+        }
+
+        if (match(TokenType::COMMA)) {
+            if (params()) {
+                return true;
+            }
+            return false;
+        }
         return true;
     }
     

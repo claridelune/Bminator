@@ -18,5 +18,7 @@ int main() {
     }
 
     Parser p(tokens);
+
+    p.parse();
     return 0;
 }
