@@ -1,10 +1,21 @@
-x: integer;
-y: integer = -123;
-b: boolean = false;
-c: char    = 'q';
-//asldk
-s: string  = "hello bminor\n";
+integer var = 1;
+// integer main() {
+    // integer a;
+    // integer b;
 
-if(c=='a')
-{
-}
+    // a = 5;
+    // b = 10;
+
+    // print(a + b);
+// }
+
+// x: integer;
+// y: integer = -123;
+// b: boolean = false;
+// c: char    = 'q';
+//asldk
+// s: string  = "hello bminor\n";
+
+// if(c=='a')
+// {
+// }
