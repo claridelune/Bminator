@@ -73,7 +73,7 @@ inline bool Scanner::isWhitespace(char c) const {
 }
 
 inline bool Scanner::isOperatorStart(char c) const {
-    return c == '+' || c == '-' || c == '*' || c == '/' || c == '<' || c == '>' || c == '=' || c == '!';
+    return c == '+' || c == '-' || c == '*' || c == '/' || c == '<' || c == '>' || c == '=' || c == '!' || c == '%' || c == '|' || c == '&';
 }
 
 inline bool Scanner::isDelimiter(char c) const {
@@ -199,6 +199,10 @@ Token Scanner::extractOperator() {
     std::string lexeme(1, firstChar);
     if (!isAtEOF() && (firstChar == '=' || firstChar == '<' || firstChar == '>' || firstChar == '!') && peekChar() == '=') {
         lexeme += getChar();
+    } else if (!isAtEOF() && firstChar == '|' && peekChar() == '|') {
+        lexeme += getChar();
+    } else if (!isAtEOF() && firstChar == '&' && peekChar() == '&') {
+        lexeme += getChar();
     }
 
     auto it = tokensMap.find(lexeme);
@@ -226,6 +230,7 @@ Token Scanner::handleSingleCharacterTokens(char currentChar) {
     switch (currentChar) {
         case COLON: return Token(TokenType::COLON, std::string(1, getChar()), line, column - 1);
         case SEMICOLON: return Token(TokenType::SEMICOLON, std::string(1, getChar()), line, column - 1);
+        case COMMA: return Token(TokenType::COMMA, std::string(1, getChar()), line, column - 1);
         case EQUAL_SIGN: return Token(TokenType::OPERATOR_EQUAL, std::string(1, getChar()), line, column - 1);
         default: return Token(TokenType::ERROR, std::string(1, getChar()), line, column++);
     }

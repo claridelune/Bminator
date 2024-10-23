@@ -31,6 +31,7 @@ class Scanner {
         static constexpr char RIGHT_PARENTHESIS = ')';
         static constexpr char COLON = ':';
         static constexpr char SEMICOLON = ';';
+        static constexpr char COMMA = ',';
         static constexpr char EQUAL_SIGN = '=';
 
         inline char peekChar() const;

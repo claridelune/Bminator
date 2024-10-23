@@ -27,6 +27,7 @@ private:
     bool exprList();
     bool exprListPrime();
     bool expression();
+    bool expressionPrime();
     bool orExpr();
     bool orExprPrime();
     bool andExpr();
@@ -44,9 +45,9 @@ private:
     bool sumOrRest();
     bool expr();
     bool exprPrime();
-    bool parentheses();
     bool factor();
     bool literal();
+    bool Parenthesis();
     bool factorPrime();
     bool statement();
     bool ifStmt();
@@ -60,6 +61,7 @@ private:
     bool type();
     bool typePrime();
     bool declaration();
+    bool declarationPrime();
     bool function();
     bool params();
     bool varDecl();

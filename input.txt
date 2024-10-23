@@ -1,21 +1,40 @@
-integer var = 1;
-// integer main() {
-    // integer a;
-    // integer b;
+integer foo(integer f, integer g) {
+    return (g + f * g)/f;
+}
 
-    // a = 5;
-    // b = 10;
+boolean checkCondition(integer value) {
+    if (value == 0) {
+        if (value % 2) {
+            return false; }
+    } else {
+        return true;
+    }
+}
 
-    // print(a + b);
-// }
+integer main() {
+    integer a;
+    integer b;
 
-// x: integer;
-// y: integer = -123;
-// b: boolean = false;
-// c: char    = 'q';
-//asldk
-// s: string  = "hello bminor\n";
+    a = 5 * 2 / 4 % 2;
+    b = 10;
+    boolean b = var >= 5;
+    char ch = 'x';
+    if (b || ch == 'x') {
+        integer i = 0;
+        integer j = 1;
+        for (i = 0; i < b; i = i + 1;) {
+            print(var % i);
+        }
+        var = foo(i,j);
+    } else {
+        print("No");
+    }
 
-// if(c=='a')
-// {
-// }
+    b = a + 10;
+    print(b);
+
+    return b;
+
+    print(b, 2 + 1, "Programa funcionando?");
+}
+
