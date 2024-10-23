@@ -640,7 +640,7 @@ bool Parser::exprPrime() {
 
 // Statement -> VarDecl | IfStmt | ForStmt | ReturnStmt | ExprStmt | PrintStmt | {StmtList}
 bool Parser::statement() {
-    Logger::getInstance().debug("Analizando 'statement'");
+    Logger::getInstance().debug("Analizando 'statement' con: " + tokens[current].value);
     if (type() && match(TokenType::IDENTIFIER)) {
         Logger::getInstance().debug("Encontrado identificador en 'statement': " + previous().value);
         return varDecl();
@@ -655,7 +655,11 @@ bool Parser::statement() {
     } else if (exprStmt()) {
         return true;
     } else if (match(TokenType::LEFT_BRACE)) {
-        return stmtList();
+        if (!stmtList()) {
+            Logger::getInstance().error("Se espera stmtList despues de { en 'statement'");
+            return false;
+        }
+        consume(TokenType::RIGHT_BRACE, "Se espera } despues de stmtList");
     }
 
     Logger::getInstance().debug("Ninguna coincidencia encontrada en 'statement'");
@@ -694,7 +698,7 @@ bool Parser::ifStmt() {
 
 // IfStmtPrime -> else { Statement } | epsilon
 bool Parser::ifStmtPrime() {
-    Logger::getInstance().debug("Analizando 'ifStmtPrime'");
+    Logger::getInstance().debug("Analizando 'ifStmtPrime' con: " + tokens[current].value);
     if (match(TokenType::KEYWORD_ELSE)) {
         Logger::getInstance().debug("Encontrado 'else'");
         consume(TokenType::LEFT_BRACE, "Se esperaba '{' después de 'else'.");
@@ -726,9 +730,8 @@ bool Parser::ifStmtPrime() {
 
 // ForStmt -> for ( ExprStmt Expression ; ExprStmt ) Statement
 bool Parser::forStmt() {
-    Logger::getInstance().debug("Analizando 'forStmt'");
+    Logger::getInstance().debug("Analizando 'forStmt': " + tokens[current].value);
     if (!match(TokenType::KEYWORD_FOR)) {
-        Logger::getInstance().debug("Analizando 'forStmt' - SE ENCONTRÓ UN FOR");
         return false;
     }
 
@@ -752,8 +755,8 @@ bool Parser::forStmt() {
     consume(TokenType::RIGHT_PARENTHESIS, "Se esperaba ')' después de la condición del 'for'.");
 
     if (!statement()) {
-        Logger::getInstance().debug("Error en 'statement' después del 'for'.");
-        return false;
+      Logger::getInstance().debug("Error en 'statement' después del 'for'.");
+      return false;
     }
 
     return true;
