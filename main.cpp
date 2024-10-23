@@ -1,7 +1,6 @@
-#include "scanner.h"
-#include "parser.h"
-#include "token.h"
-
+#include "src/scanner/scanner.h"
+#include "src/utils/logger.h"
+#include "src/parser/parser.h"
 #include <fstream>
 
 int main() {
@@ -13,12 +12,15 @@ int main() {
 
     const std::vector<Token>& tokens = s.getTokens();
 
+    Logger& logger = Logger::getInstance();
+    logger.setLogLevel(Logger::LogLevel::INFO);
+    logger.setActive(true);
+
     for (auto token : tokens) {
         token.print();
     }
 
     Parser p(tokens);
-
     p.parse();
     return 0;
 }
