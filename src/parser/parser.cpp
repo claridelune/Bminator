@@ -59,14 +59,19 @@ bool Parser::program() {
     return declaration() && programPrime();
 }
 
-/* ProgramPrime -> Declaration ProgramPrime */
 bool Parser::programPrime() {
     Logger::getInstance().debug("Analizando 'programPrime' con: " + tokens[current].value);
-    if (isAtEnd() || !checkForDeclarationStart()) {
+    
+    if (isAtEnd()) {
         Logger::getInstance().debug("'programPrime' encontrado epsilon");
         return true;
     }
-    
+
+    if (!checkForDeclarationStart()) {
+        Logger::getInstance().debug("No se encontró un tipo de dato válido en 'programPrime'");
+        return false;
+    }
+
     if (!declaration()) {
         Logger::getInstance().debug("Error en 'declaration' dentro de 'programPrime'");
         return false;
@@ -600,7 +605,7 @@ bool Parser::sumOrRest() {
 Expr -> Term ExprPrime
 */
 bool Parser::expr() {
-    Logger::getInstance().debug("Analizando 'expr'");
+    Logger::getInstance().debug("Analizando 'expr' con: " + tokens[current].value);
     if (!term()) return false;
     return exprPrime();
 }
@@ -635,7 +640,7 @@ bool Parser::exprPrime() {
 
 // Statement -> VarDecl | IfStmt | ForStmt | ReturnStmt | ExprStmt | PrintStmt | {StmtList}
 bool Parser::statement() {
-    Logger::getInstance().debug("Analizando 'statement'");
+    Logger::getInstance().debug("Analizando 'statement' con: " + tokens[current].value);
     if (type() && match(TokenType::IDENTIFIER)) {
         Logger::getInstance().debug("Encontrado identificador en 'statement': " + previous().value);
         return varDecl();
@@ -650,7 +655,11 @@ bool Parser::statement() {
     } else if (exprStmt()) {
         return true;
     } else if (match(TokenType::LEFT_BRACE)) {
-        return stmtList();
+        if (!stmtList()) {
+            Logger::getInstance().error("Se espera stmtList despues de { en 'statement'");
+            return false;
+        }
+        consume(TokenType::RIGHT_BRACE, "Se espera } despues de stmtList");
     }
 
     Logger::getInstance().debug("Ninguna coincidencia encontrada en 'statement'");
@@ -663,6 +672,7 @@ bool Parser::ifStmt() {
     if (!match(TokenType::KEYWORD_IF)) {
         return false;
     }
+    Logger::getInstance().debug("Analizando 'ifStmt' - IF ENCONTRADO");
 
     consume(TokenType::LEFT_PARENTHESIS, "Se esperaba '(' después de 'if'.");
     if (!expression()) {
@@ -671,6 +681,9 @@ bool Parser::ifStmt() {
     }
 
     consume(TokenType::RIGHT_PARENTHESIS, "Se esperaba ')' después de la expresión.");
+
+    Logger::getInstance().debug("Analizando 'ifStmt' - ENCONTRADA CONDICIÓN ENTRE PARENTESIS");
+
     consume(TokenType::LEFT_BRACE, "Se esperaba '{' después de la expresión.");
 
     if (!stmtList()) {
@@ -679,12 +692,13 @@ bool Parser::ifStmt() {
     }
 
     consume(TokenType::RIGHT_BRACE, "Se esperaba '}' después del bloque de 'if'.");
+    Logger::getInstance().debug("Analizando 'ifStmt' - ENCONTRADO BLOQUE ENTRE CORCHETES");
     return ifStmtPrime();
 }
 
 // IfStmtPrime -> else { Statement } | epsilon
 bool Parser::ifStmtPrime() {
-    Logger::getInstance().debug("Analizando 'ifStmtPrime'");
+    Logger::getInstance().debug("Analizando 'ifStmtPrime' con: " + tokens[current].value);
     if (match(TokenType::KEYWORD_ELSE)) {
         Logger::getInstance().debug("Encontrado 'else'");
         consume(TokenType::LEFT_BRACE, "Se esperaba '{' después de 'else'.");
@@ -705,6 +719,7 @@ bool Parser::ifStmtPrime() {
         check(TokenType::LITERAL_CHAR) || check(TokenType::LITERAL_STRING) ||
         check(TokenType::KEYWORD_TRUE) || check(TokenType::KEYWORD_FALSE) ||
         check(TokenType::LEFT_PARENTHESIS)) {
+        Logger::getInstance().debug("Epsilon encontrado en 'ifStmtPrime' - NO SE ENCONTRÓ ELSE");
         Logger::getInstance().debug("Epsilon encontrado en 'ifStmtPrime'");
         return true;
     }
@@ -715,7 +730,7 @@ bool Parser::ifStmtPrime() {
 
 // ForStmt -> for ( ExprStmt Expression ; ExprStmt ) Statement
 bool Parser::forStmt() {
-    Logger::getInstance().debug("Analizando 'forStmt'");
+    Logger::getInstance().debug("Analizando 'forStmt': " + tokens[current].value);
     if (!match(TokenType::KEYWORD_FOR)) {
         return false;
     }
@@ -738,9 +753,10 @@ bool Parser::forStmt() {
     }
 
     consume(TokenType::RIGHT_PARENTHESIS, "Se esperaba ')' después de la condición del 'for'.");
+
     if (!statement()) {
-        Logger::getInstance().debug("Error en 'statement' después del 'for'.");
-        return false;
+      Logger::getInstance().debug("Error en 'statement' después del 'for'.");
+      return false;
     }
 
     return true;
