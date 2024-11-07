@@ -8,11 +8,12 @@
 class Parser {
 public:
     Parser(const std::vector<Token>& tokens);
-    void parse();
+    bool parse();
 
 private:
     std::vector<Token> tokens;
     int current;
+    bool failed = false;
 
     bool isAtEnd();
     Token peek();
@@ -21,6 +22,10 @@ private:
     bool match(TokenType type);
     bool check(TokenType type);
     Token consume(TokenType type, const std::string& message);
+
+    // Recuperación de errores
+    void synchronize();
+    void error(const std::string& message);
 
     bool program();
     bool programPrime();
