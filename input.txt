@@ -1,10 +1,12 @@
+# char myChar = 'k';
+
 integer foo(integer f, integer g) {
-    return (g + f * g)/f;
+    return (g ++ f * g)/f;
 }
 
 boolean checkCondition(integer value) {
     if (value == 0) {
-        if (value % 2) {
+        if (!value) {
             return false; }
     } else {
         return true;
@@ -15,7 +17,7 @@ integer main() {
     integer a;
     integer b;
 
-    a = 5 * 2 / 4 % 2;
+    a = -5 * -2 / 4 % 2;
     b = 10;
     boolean b = var >= 5;
     char ch = 'x';
