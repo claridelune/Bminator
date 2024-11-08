@@ -15,9 +15,9 @@ public:
         PrintIndent();
         std::cout << "ProgramNode\n";
         Indent();
-        for (const auto& decl : node.declarations) {
+        /* for (const auto& decl : node.declarations) {
             decl->Accept(*this);
-        }
+        } */
         Dedent();
     }
 
@@ -239,4 +239,42 @@ public:
         }
         Dedent();
     }
+
+    void Visit(FunctionCallNode& node) override {
+        PrintIndent();
+        std::cout << "FunctionCallNode: " << node.functionName->identifier.value << "\n";
+        Indent();
+        PrintIndent();
+        std::cout << "Arguments:\n";
+        Indent();
+        if (node.arguments) {
+            for (const auto& arg : node.arguments->expressions) {
+                arg->Accept(*this);
+            }
+        }
+        Dedent();
+        Dedent();
+    }
+
+    void Visit(IndexingNode& node) override {
+        PrintIndent();
+        std::cout << "IndexingNode\n";
+        Indent();
+        
+        PrintIndent();
+        std::cout << "Base:\n";
+        Indent();
+        node.base->Accept(*this); // Visitar el nodo base
+        Dedent();
+
+        PrintIndent();
+        std::cout << "Index:\n";
+        Indent();
+        node.index->Accept(*this); // Visitar el nodo índice
+        Dedent();
+        
+        Dedent();
+    }
 };
+
+

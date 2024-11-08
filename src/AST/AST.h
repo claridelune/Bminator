@@ -72,7 +72,7 @@ class VarDeclarationNode : public DeclarationNode {
 public:
     Token type;
     Token identifier;
-    UnqPtr<ASTNode> expression;  // Valor asignado, opcional
+    UnqPtr<ASTNode> expression;  // opcional
 
     VarDeclarationNode(const Token& t, const Token& id, UnqPtr<ASTNode> expr = nullptr)
         : type(t), identifier(id), expression(std::move(expr)) {}
@@ -91,7 +91,7 @@ public:
     ParamNode(const Token& t, const Token& id) : type(t), identifier(id) {}
 
     void Accept(ASTNodeVisitor& v) override { v.Visit(*this); }
-    void SetChildrenPrintID(const std::string& pID) noexcept override { /* No children */ }
+    void SetChildrenPrintID(const std::string& pID) noexcept override {}
 };
 
 class FunctionDeclarationNode : public DeclarationNode {
@@ -165,7 +165,7 @@ public:
     LiteralNode(const Token& lit) : literal(lit) {}
 
     void Accept(ASTNodeVisitor& v) override { v.Visit(*this); }
-    void SetChildrenPrintID(const std::string& pID) noexcept override { /* No children */ }
+    void SetChildrenPrintID(const std::string& pID) noexcept override {}
 };
 
 class IdentifierNode : public ExpressionNode {
@@ -175,7 +175,7 @@ public:
     IdentifierNode(const Token& id) : identifier(id) {}
 
     void Accept(ASTNodeVisitor& v) override { v.Visit(*this); }
-    void SetChildrenPrintID(const std::string& pID) noexcept override { /* No children */ }
+    void SetChildrenPrintID(const std::string& pID) noexcept override {}
 };
 
 class TypeNode : public ASTNode {
@@ -186,7 +186,7 @@ public:
     TypeNode(const Token& t, bool array = false) : type(t), isArray(array) {}
 
     void Accept(ASTNodeVisitor& v) override { v.Visit(*this); }
-    void SetChildrenPrintID(const std::string& pID) noexcept override { /* No children */ }
+    void SetChildrenPrintID(const std::string& pID) noexcept override {}
 };
 
 class StatementNode : public ASTNode {};
@@ -311,13 +311,14 @@ public:
 
 class ExpressionStatementNode : public StatementNode {
 public:
-    UnqPtr<ASTNode> expression;
+    UnqPtr<ASTNode> expression;  // opcional 
 
-    ExpressionStatementNode(UnqPtr<ASTNode> expr) : expression(std::move(expr)) {}
+    ExpressionStatementNode(UnqPtr<ASTNode> expr = nullptr) 
+        : expression(std::move(expr)) {}
 
     void Accept(ASTNodeVisitor& v) override { v.Visit(*this); }
     void SetChildrenPrintID(const std::string& pID) override {
-        expression->parentID = pID;
+        if (expression) expression->parentID = pID;
     }
 };
 
@@ -333,6 +334,39 @@ public:
         parameters.push_back(std::move(param));
     }
 };
+
+class FunctionCallNode : public ASTNode {
+    public:
+        UnqPtr<IdentifierNode> functionName;
+        UnqPtr<ExprListNode> arguments;
+
+        FunctionCallNode(UnqPtr<IdentifierNode> fnName, UnqPtr<ExprListNode> args)
+            : functionName(std::move(fnName)), arguments(std::move(args)) {}
+        
+        void Accept(ASTNodeVisitor& v) override { v.Visit(*this); }
+        void SetChildrenPrintID(const std::string& pID) override {
+            functionName->parentID = pID;
+            if (arguments) {
+                arguments->parentID = pID;
+            }
+        }
+};
+
+class IndexingNode : public ASTNode {
+public:
+    UnqPtr<ASTNode> base;
+    UnqPtr<ASTNode> index;
+
+    IndexingNode(UnqPtr<ASTNode> b, UnqPtr<ASTNode> i)
+        : base(std::move(b)), index(std::move(i)) {}
+
+    void Accept(ASTNodeVisitor& v) override { v.Visit(*this); }
+    void SetChildrenPrintID(const std::string& pID) override {
+        base->parentID = pID;
+        index->parentID = pID;
+    }
+};
+
 
 #endif
 

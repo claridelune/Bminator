@@ -26,6 +26,8 @@ class PrintStatementNode;
 class ExpressionStatementNode;
 class CompoundStatementNode;
 class ExprListNode;
+class FunctionCallNode;
+class IndexingNode; 
 
 class ASTNodeVisitor {
 public:
@@ -61,6 +63,9 @@ public:
     virtual void Visit(CompoundStatementNode& node) = 0;
 
     virtual void Visit(ExprListNode& node) = 0;
+
+    virtual void Visit(FunctionCallNode& node) = 0;
+    virtual void Visit(IndexingNode& node) = 0;
 };
 
 #endif
