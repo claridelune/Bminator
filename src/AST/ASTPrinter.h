@@ -15,9 +15,9 @@ public:
         PrintIndent();
         std::cout << "ProgramNode\n";
         Indent();
-        /* for (const auto& decl : node.declarations) {
+        for (const auto& decl : node.declarations) {
             decl->Accept(*this);
-        } */
+        }
         Dedent();
     }
 

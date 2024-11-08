@@ -1,1 +1,33 @@
-char myChar = 'k';
+//char myChar = 'k';
+
+integer foo(integer f, integer g) {
+    return (g ++ f * g)/f;
+}
+//integer foo(integer f, integer g) {
+    //return (g + f * g)/f;
+//}
+
+// boolean checkCondition(integer value) {
+    // if (value == 0) {
+        // if (value % 2) {
+            // return false; }
+    // } else {
+        // return true;
+    // }
+// }
+
+//integer main() {
+    //for (i = 0; i < b; i = i + 1;) {
+        //print(var % i);
+    //}
+    //if (b || ch == 'x') {
+        //integer i = 0;
+        //integer j = 1;
+        //var = foo(i,j);
+    //} else {
+        //print("No");
+    //}
+
+    // return b;
+    //print(b, 2 + 1, "Programa funcionando?");
+//}

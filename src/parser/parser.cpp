@@ -70,7 +70,9 @@ void Parser::synchronize() {
     Logger::getInstance().debug("SYNC from " + tokens[current].value);
     advance();
     while (!isAtEnd()) {
-        if (previous().type == TokenType::SEMICOLON) return; // Retorna al encontrar un punto y coma
+      if (previous().type == TokenType::SEMICOLON) {
+        return;
+      } // Retorna al encontrar un punto y coma
         Logger::getInstance().debug("Advanced token " + tokens[current].value);
         advance();
     }
@@ -976,6 +978,7 @@ bool Parser::stmtListPrime(UnqPtr<CompoundStatementNode>& compoundNode) {
     UnqPtr<ASTNode> stmtNode = statement();
     if (stmtNode) {
         Logger::getInstance().debug("Encontrado 'statement' en 'stmtListPrime'");
+        compoundNode->AddStatement(std::move(stmtNode));
         return stmtListPrime(compoundNode);
     }
     if (check(TokenType::RIGHT_BRACE)) {
