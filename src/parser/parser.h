@@ -2,6 +2,7 @@
 #define PARSER_H
 
 #include <vector>
+#include "../AST/AST.h"
 #include "../scanner/token.h"
 #include "../utils/logger.h"
 

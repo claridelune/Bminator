@@ -66,7 +66,8 @@ void Parser::synchronize() {
             if(tokens[current].type == TokenType::LEFT_BRACKET) advance();
             Logger::getInstance().debug("SYNC ended at " + tokens[current].value);
             program();
-            return; }; // Retorna al encontrar un punto y coma o un }
+            return;
+            }; // Retorna al encontrar un punto y coma
         Logger::getInstance().debug("SYNC advance " + tokens[current].value);
         advance();
     }
@@ -116,7 +117,7 @@ bool Parser::declaration() {
             Logger::getInstance().debug("Encontrado identificador en 'declaration': " + previous().value);
             return declarationPrime();
         } else {
-            Logger::getInstance().debug("Se esperaba un identificador después del tipo en 'declaration'.");
+            Logger::getInstance().error("Se esperaba un identificador después del tipo en 'declaration'.");
             
             //throw std::runtime_error("Se esperaba un identificador después del tipo.");
         }
@@ -215,10 +216,14 @@ bool Parser::varDecl() {
         Logger::getInstance().debug("Asignación en declaración de variable");
         if (!expression()) {
             Logger::getInstance().debug("Se esperaba una expresión después del '=' en 'varDecl'");
-            throw std::runtime_error("Se esperaba una expresión después del '='.");
+            synchronize();
+            //throw std::runtime_error("Se esperaba una expresión después del '='.");
         }
-
-        consume(TokenType::SEMICOLON, "Se esperaba ';' al final de la declaración.");
+        if(!match(TokenType::SEMICOLON)){
+            Logger::getInstance().error("Se esperaba ';' al final de la declaración.");
+            synchronize();
+            return false;
+        }
         Logger::getInstance().debug("Declaración de variable con asignación finalizada");
         return true;
     }
@@ -310,8 +315,9 @@ bool Parser::orExprPrime() {
     if (match(TokenType::OPERATOR_OR)) {
         Logger::getInstance().debug("Encontrado operador '||'");
         if (!andExpr()) {
-            Logger::getInstance().debug("Se esperaba una expresión después de '||'.");
-            throw std::runtime_error("Se esperaba una expresión después de '||'.");
+            Logger::getInstance().error("Se esperaba una expresión después de '||'.");
+            synchronize();
+            //throw std::runtime_error("Se esperaba una expresión después de '||'.");
         }
         return orExprPrime();
     }
@@ -717,8 +723,9 @@ bool Parser::ifStmt() {
 
     consume(TokenType::LEFT_PARENTHESIS, "Se esperaba '(' después de 'if'.");
     if (!expression()) {
-        Logger::getInstance().debug("Se esperaba una expresión dentro del 'if'.");
-        throw std::runtime_error("Se esperaba una expresión dentro del 'if'.");
+        Logger::getInstance().error("Se esperaba una expresión dentro del 'if'.");
+        //synchronize();
+        //throw std::runtime_error("Se esperaba una expresión dentro del 'if'.");
     }
 
     consume(TokenType::RIGHT_PARENTHESIS, "Se esperaba ')' después de la expresión.");
@@ -783,8 +790,9 @@ bool Parser::forStmt() {
     }
 
     if (!expression()) {
-        Logger::getInstance().debug("Se esperaba una expresión en la condición del 'for'.");
-        throw std::runtime_error("Se esperaba una expresión en la condición del 'for'.");
+        Logger::getInstance().error("Se esperaba una expresión en la condición del 'for'.");
+        synchronize();
+        //throw std::runtime_error("Se esperaba una expresión en la condición del 'for'.");
     }
 
     consume(TokenType::SEMICOLON, "Se esperaba ';' después de la condición del 'for'.");
