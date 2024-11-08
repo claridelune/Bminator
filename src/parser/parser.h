@@ -25,7 +25,6 @@ private:
 
     // Recuperación de errores
     void synchronize();
-    void error(const std::string& message);
 
     bool program();
     bool programPrime();

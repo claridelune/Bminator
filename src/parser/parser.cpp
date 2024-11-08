@@ -7,6 +7,7 @@ bool Parser::parse() {
     Logger& logger = Logger::getInstance();
     logger.info("Iniciando el análisis del programa.");
     program();
+    logger.info("FIN");
     if (!failed) {
         logger.info("El input pertenece a la gramática.");
     } else {
@@ -52,25 +53,31 @@ Token Parser::consume(TokenType type, const std::string& message) {
     if (check(type)) {
         return advance();
     }
-    Logger::getInstance().debug(message);
-    throw std::runtime_error(message);
+    Logger::getInstance().error(message);
+    //
+    //throw std::runtime_error(message);
 }
 
 void Parser::synchronize() {
     Logger::getInstance().debug("SYNC from " + tokens[current].value);
     advance();
     while (!isAtEnd()) {
-        if (previous().type == TokenType::SEMICOLON) return; // Retorna al encontrar un punto y coma
-        Logger::getInstance().debug("Advanced token " + tokens[current].value);
+        if (previous().type == TokenType::SEMICOLON){
+            if(tokens[current].type == TokenType::LEFT_BRACKET) advance();
+            Logger::getInstance().debug("SYNC ended at " + tokens[current].value);
+            program();
+            return; }; // Retorna al encontrar un punto y coma o un }
+        Logger::getInstance().debug("SYNC advance " + tokens[current].value);
         advance();
     }
+    
     program();
 }
 
 /* Program -> Declaration ProgramPrime */
 bool Parser::program() {
     Logger::getInstance().debug("Analizando 'program' con: " + tokens[current].value);
-    failed = !(declaration() && programPrime());
+    failed = !(declaration() & programPrime());
     return failed;
 }
 
@@ -89,8 +96,9 @@ bool Parser::programPrime() {
     }
 
     if (!declaration()) {
-        Logger::getInstance().error("Error en 'declaration' dentro de 'programPrime' para " + tokens[current].value);
-        synchronize();
+        Logger::getInstance().debug("Error en 'declaration' dentro de 'programPrime' para " + tokens[current].value);
+        Logger::getInstance().error("No se esperaba " + tokens[current].value);
+        
         return false;
     }
 
@@ -109,13 +117,14 @@ bool Parser::declaration() {
             return declarationPrime();
         } else {
             Logger::getInstance().debug("Se esperaba un identificador después del tipo en 'declaration'.");
-            synchronize();
+            
             //throw std::runtime_error("Se esperaba un identificador después del tipo.");
         }
     }
 
-    Logger::getInstance().error("Error en 'declaration', no se encontró un tipo válido para " + tokens[current].value);
-    synchronize();
+    Logger::getInstance().debug("Error en 'declaration', no se encontró un tipo válido para " + tokens[current].value);
+    Logger::getInstance().debug("Calling SYNC from declaration");
+    
     return false;
 }
 
@@ -128,7 +137,8 @@ bool Parser::declarationPrime() {
     if (check(TokenType::LEFT_PARENTHESIS)) return function();
     if (check(TokenType::OPERATOR_ASSIGN)) return varDecl();
     Logger::getInstance().error("Se esperaba un '(' o un operador de asignación en lugar de: " + tokens[current].value);
-    synchronize();
+    Logger::getInstance().debug("Calling SYNC from declarationPrime");
+    
     return false;
 }
 
@@ -145,11 +155,12 @@ bool Parser::function() {
             consume(TokenType::RIGHT_BRACE, "Se esperaba '}' al final del cuerpo de la función.");
             return true;
         }
-        Logger::getInstance().error("Error en la declaración de la función.");
+        Logger::getInstance().debug("Error en la declaración de la función.");
         // throw std::runtime_error("Error en la declaración de la función.");
     }
     Logger::getInstance().error("Se esperaba una declaración de tipo (content)");
-    synchronize();
+    Logger::getInstance().debug("Calling SYNC from function");
+    
     return false;
 }
 
@@ -167,11 +178,13 @@ bool Parser::params() {
                 return true;
             }
             Logger::getInstance().error("Se esperaban parámetros válidos");
-            synchronize();
+            Logger::getInstance().debug("Calling SYNC from params");
+            
             return false;
         }
         Logger::getInstance().error("Se esperaba un identificador después del tipo en 'params'.");
-        synchronize();
+        Logger::getInstance().debug("Calling SYNC from params");
+        
         //throw std::runtime_error("Se esperaba un identificador después del tipo en 'params'.");
     }
 
@@ -181,15 +194,16 @@ bool Parser::params() {
             return true;
         }
         Logger::getInstance().error("Se esperaban parámetros válidos después de ',' en 'params'");
-        synchronize();
+        
         return false;
     }
     if (check(TokenType::RIGHT_PARENTHESIS)) {
         Logger::getInstance().debug("Epsilon encontrado en 'params'");
         return true;
     }
-    Logger::getInstance().error("Error en 'params': token inesperado: " + tokens[current].value);
-    synchronize();
+    Logger::getInstance().debug("Error en 'params': token inesperado: " + tokens[current].value);
+    Logger::getInstance().debug("Calling SYNC from params");
+    
     return false;
 }
 
@@ -213,7 +227,7 @@ bool Parser::varDecl() {
         return true;
     }
 
-    Logger::getInstance().error("Error en 'varDecl', se esperaba ';' o '='.");
+    Logger::getInstance().debug("Error en 'varDecl', se esperaba ';' o '='.");
     return false;
 }
 
@@ -221,7 +235,7 @@ bool Parser::varDecl() {
 bool Parser::exprList() {
     Logger::getInstance().debug("Analizando 'exprList' con: " + tokens[current].value);
     if (!expression()) {
-        Logger::getInstance().error("Error en 'expression' dentro de 'exprList'");
+        Logger::getInstance().debug("Error en 'expression' dentro de 'exprList'");
         return false;
     }
     return exprListPrime();
@@ -233,7 +247,7 @@ bool Parser::exprListPrime() {
     Logger::getInstance().debug("Analizando 'exprListPrime' con: " + tokens[current].value);
     if (match(TokenType::COMMA)) {
         if (!exprList()) {
-            Logger::getInstance().error("Error en 'exprList' después de ',' en 'exprListPrime'");
+            Logger::getInstance().debug("Error en 'exprList' después de ',' en 'exprListPrime'");
             return false;
         }
         return true;
@@ -242,7 +256,7 @@ bool Parser::exprListPrime() {
         Logger::getInstance().debug("Epsilon encontrado en 'exprListPrime'");
         return true;
     }
-    Logger::getInstance().error("Error en 'exprListPrime': token inesperado");
+    Logger::getInstance().debug("Error en 'exprListPrime': token inesperado");
     return false;
 }
 
@@ -264,7 +278,7 @@ bool Parser::expressionPrime() {
     if (match(TokenType::OPERATOR_ASSIGN)) {
         Logger::getInstance().debug("Se encontró operador de asignación");
         if (!orExpr()) {
-            Logger::getInstance().error("Error en 'orExpr' después de operador de asignación en 'expressionPrime'");
+            Logger::getInstance().debug("Error en 'orExpr' después de operador de asignación en 'expressionPrime'");
             return false;
         }
         return true;
@@ -274,7 +288,7 @@ bool Parser::expressionPrime() {
         Logger::getInstance().debug("Epsilon encontrado en 'expressionPrime'");
         return true;
     }
-    Logger::getInstance().error("Error en 'expressionPrime': token inesperado");
+    Logger::getInstance().debug("Error en 'expressionPrime': token inesperado");
     return false;
 }
 
@@ -308,7 +322,7 @@ bool Parser::orExprPrime() {
         return true;
     }
 
-    Logger::getInstance().error("Error en 'orExprPrime': token inesperado");
+    Logger::getInstance().debug("Error en 'orExprPrime': token inesperado");
     return false;
 }
 
@@ -347,7 +361,7 @@ bool Parser::andExprPrime() {
         return true;
     }
 
-    Logger::getInstance().error("Error en 'andExprPrime': token inesperado");
+    Logger::getInstance().debug("Error en 'andExprPrime': token inesperado");
     return false;
 }
 
@@ -491,7 +505,7 @@ bool Parser::termPrime() {
     if (multOrDivOrMod()) {
         Logger::getInstance().debug("Encontrado operador de multiplicación/división/módulo");
         if (!unary()) {
-            Logger::getInstance().error("Error en 'unary' después de operador en 'termPrime'");
+            Logger::getInstance().debug("Error en 'unary' después de operador en 'termPrime'");
             return false;
         }
         return termPrime();
@@ -508,7 +522,7 @@ bool Parser::termPrime() {
         return true;
     }
 
-    Logger::getInstance().error("Error en 'termPrime': token inesperado");
+    Logger::getInstance().debug("Error en 'termPrime': token inesperado");
     return false;
 }
 
@@ -547,7 +561,7 @@ bool Parser::eqExprPrime() {
     if (equalOrDifferent()) {
         Logger::getInstance().debug("Encontrado operador de igualdad/desigualdad");
         if (!relExpr()) {
-            Logger::getInstance().error("Error en 'relExpr' después de operador en 'eqExprPrime'");
+            Logger::getInstance().debug("Error en 'relExpr' después de operador en 'eqExprPrime'");
             return false;
         }
         return eqExprPrime();
@@ -559,7 +573,7 @@ bool Parser::eqExprPrime() {
         Logger::getInstance().debug("Epsilon encontrado en 'eqExprPrime'");
         return true;
     }
-    Logger::getInstance().error("Error en 'eqExprPrime': token inesperado");
+    Logger::getInstance().debug("Error en 'eqExprPrime': token inesperado");
     return false;
 }
 
@@ -598,7 +612,7 @@ bool Parser::relExprPrime() {
     if (greaterOrLess()) {
         Logger::getInstance().debug("Encontrado operador de comparación");
         if (!expr()) {
-            Logger::getInstance().error("Error en 'expr' después de operador en 'relExprPrime'");
+            Logger::getInstance().debug("Error en 'expr' después de operador en 'relExprPrime'");
             return false;
         }
         return relExprPrime();
@@ -612,7 +626,7 @@ bool Parser::relExprPrime() {
         return true;
     }
 
-    Logger::getInstance().error("Error en 'relExprPrime': token inesperado");
+    Logger::getInstance().debug("Error en 'relExprPrime': token inesperado");
     return false;
 }
 
@@ -646,7 +660,7 @@ bool Parser::exprPrime() {
     if (sumOrRest()) {
         Logger::getInstance().debug("Encontrado operador de suma/resta");
         if (!term()) {
-            Logger::getInstance().error("Error en 'term' después de operador en 'exprPrime'");
+            Logger::getInstance().debug("Error en 'term' después de operador en 'exprPrime'");
             return false;
         }
         return exprPrime();
@@ -661,7 +675,7 @@ bool Parser::exprPrime() {
         Logger::getInstance().debug("Epsilon encontrado en 'exprPrime'");
         return true;
     }
-    Logger::getInstance().error("Error en 'exprPrime': token inesperado");
+    Logger::getInstance().debug("Error en 'exprPrime': token inesperado");
     return false;
 }
 
@@ -714,7 +728,7 @@ bool Parser::ifStmt() {
     consume(TokenType::LEFT_BRACE, "Se esperaba '{' después de la expresión.");
 
     if (!stmtList()) {
-        Logger::getInstance().error("Error en 'statement' dentro de 'ifStmt'");
+        Logger::getInstance().debug("Error en 'statement' dentro de 'ifStmt'");
         return false;
     }
 
@@ -730,7 +744,7 @@ bool Parser::ifStmtPrime() {
         Logger::getInstance().debug("Encontrado 'else'");
         consume(TokenType::LEFT_BRACE, "Se esperaba '{' después de 'else'.");
         if (!statement()) {
-            Logger::getInstance().error("Error en 'statement' dentro de 'ifStmtPrime'");
+            Logger::getInstance().debug("Error en 'statement' dentro de 'ifStmtPrime'");
             return false;
         }
         consume(TokenType::RIGHT_BRACE, "Se esperaba '}' después del bloque de 'else'.");
@@ -751,7 +765,7 @@ bool Parser::ifStmtPrime() {
         return true;
     }
 
-    Logger::getInstance().error("Error en 'ifStmtPrime': token inesperado");
+    Logger::getInstance().debug("Error en 'ifStmtPrime': token inesperado");
     return false;
 }
 
@@ -764,7 +778,7 @@ bool Parser::forStmt() {
 
     consume(TokenType::LEFT_PARENTHESIS, "Se esperaba '(' después de 'for'.");
     if (!exprStmt()) {
-        Logger::getInstance().error("Error en 'exprStmt' dentro de 'forStmt'");
+        Logger::getInstance().debug("Error en 'exprStmt' dentro de 'forStmt'");
         return false;
     }
 
@@ -775,7 +789,7 @@ bool Parser::forStmt() {
 
     consume(TokenType::SEMICOLON, "Se esperaba ';' después de la condición del 'for'.");
     if (!exprStmt()) {
-        Logger::getInstance().error("Error en 'exprStmt' después de ';' en 'forStmt'");
+        Logger::getInstance().debug("Error en 'exprStmt' después de ';' en 'forStmt'");
         return false;
     }
 
@@ -793,15 +807,22 @@ bool Parser::forStmt() {
 bool Parser::returnStmt() {
     Logger::getInstance().debug("Analizando 'returnStmt'");
     if (!match(TokenType::KEYWORD_RETURN)) {
+        //synchronize();
         return false;
     }
 
     if (!expression()) {
-        Logger::getInstance().debug("Se esperaba una expresión después de 'return'.");
-        throw std::runtime_error("Se esperaba una expresión después de 'return'.");
+        Logger::getInstance().error("Se esperaba una expresión después de 'return'.");
+        Logger::getInstance().debug("Calling SYNC from returnStmt");
     }
 
-    consume(TokenType::SEMICOLON, "Se esperaba ';' después de la expresión de retorno.");
+    if(!match(TokenType::SEMICOLON)){
+        Logger::getInstance().error("Se esperaba ';' después de la expresión de retorno.");
+        Logger::getInstance().debug("Calling SYNC from returnStmt");
+        
+        return false;
+    }
+
     return true;
 }
 
@@ -814,7 +835,7 @@ bool Parser::printStmt() {
 
     consume(TokenType::LEFT_PARENTHESIS, "Se esperaba '(' después de 'print'.");
     if (!exprList()) {
-        Logger::getInstance().error("Error en 'exprList' dentro de 'printStmt'");
+        Logger::getInstance().debug("Error en 'exprList' dentro de 'printStmt'");
         return false;
     }
 
@@ -841,7 +862,7 @@ bool Parser::exprStmt() {
 bool Parser::stmtList() {
     Logger::getInstance().debug("Analizando 'stmtList'");
     if (!statement()) {
-        Logger::getInstance().error("Error en 'statement' dentro de 'stmtList'");
+        Logger::getInstance().debug("Error en 'statement' dentro de 'stmtList'");
         return false;
     }
 
@@ -860,7 +881,7 @@ bool Parser::stmtListPrime() {
         return true;
     }
 
-    Logger::getInstance().error("Error en 'stmtListPrime': token inesperado");
+    Logger::getInstance().debug("Error en 'stmtListPrime': token inesperado");
     return false;
 }
 
@@ -898,7 +919,7 @@ bool Parser::typePrime() {
         return true;
     }
 
-    Logger::getInstance().error("Error en 'typePrime', no se encontró un token válido.");
+    Logger::getInstance().debug("Error en 'typePrime', no se encontró un token válido.");
     return false;
 }
 
