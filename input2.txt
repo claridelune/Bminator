@@ -1,11 +1,11 @@
-//char myChar = 'k';
+char myChar = 'k';
 
-integer foo(integer f, integer g) {
+integer foo(integer f integer g) {
     return (g ++ f * g)/f;
 }
-//integer foo(integer f, integer g) {
-    //return (g + f * g)/f;
-//}
+// integer foo(integer f, integer g) {
+    // return (g + f * g)/f;
+// }
 
 // boolean checkCondition(integer value) {
     // if (value == 0) {

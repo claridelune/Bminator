@@ -25,7 +25,7 @@ private:
     Token previous();
     bool match(TokenType type);
     bool check(TokenType type);
-    Token consume(TokenType type, const std::string& message);
+    UnqPtr<ASTNode> consume(TokenType type, const std::string& message);
 
     // Recuperación de errores
     void synchronize();

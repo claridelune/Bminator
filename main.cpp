@@ -16,7 +16,7 @@ int main() {
     const std::vector<Token>& tokens = s.getTokens();
 
     Logger& logger = Logger::getInstance();
-    logger.setLogLevel(Logger::LogLevel::DEBUG);
+    logger.setLogLevel(Logger::LogLevel::ERROR);
     logger.setActive(true);
 
     for (auto token : tokens) {

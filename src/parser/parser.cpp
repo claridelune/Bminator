@@ -58,9 +58,11 @@ bool Parser::check(TokenType type) {
     return peek().type == type;
 }
 
-Token Parser::consume(TokenType type, const std::string& message) {
-    if (check(type)) {
-        return advance();
+UnqPtr<ASTNode> Parser::consume(TokenType type, const std::string& message) {
+    if (!match(type)) {
+        Logger::getInstance().error(message);
+        synchronize();
+        return nullptr;
     }
     Logger::getInstance().debug(message);
     throw std::runtime_error(message);
@@ -70,12 +72,16 @@ void Parser::synchronize() {
     Logger::getInstance().debug("SYNC from " + tokens[current].value);
     advance();
     while (!isAtEnd()) {
-      if (previous().type == TokenType::SEMICOLON) {
-        return;
-      } // Retorna al encontrar un punto y coma
-        Logger::getInstance().debug("Advanced token " + tokens[current].value);
+        if (previous().type == TokenType::SEMICOLON){
+            if(tokens[current].type == TokenType::LEFT_BRACKET) advance();
+            Logger::getInstance().debug("SYNC ended at " + tokens[current].value);
+            program();
+            return;
+            }; // Retorna al encontrar un punto y coma
+        Logger::getInstance().debug("SYNC advance " + tokens[current].value);
         advance();
     }
+    
     program();
 }
 
@@ -168,13 +174,25 @@ UnqPtr<FunctionDeclarationNode> Parser::function(const Token& typeToken, const T
     auto functionNode = std::make_unique<FunctionDeclarationNode>(typeToken, identifierToken, std::vector<UnqPtr<ParamNode>>{}, nullptr);
     
     if (match(TokenType::LEFT_PARENTHESIS) && params(functionNode->parameters)) {
-        consume(TokenType::RIGHT_PARENTHESIS, "Se esperaba ')' al final de los parámetros.");
-        consume(TokenType::LEFT_BRACE, "Se esperaba '{' al inicio del cuerpo de la función.");
+        if (!match(TokenType::RIGHT_PARENTHESIS)) {
+            Logger::getInstance().error("Se esperaba ')' al final de los parámetros.");
+            synchronize();
+            return nullptr;
+        }
+        if (!match(TokenType::LEFT_BRACE)) {
+            Logger::getInstance().error("Se esperaba '{' al inicio del cuerpo de la función.");
+            synchronize();
+            return nullptr;
+        }
 
         functionNode->body = stmtList();
         
         if (functionNode->body) {
-            consume(TokenType::RIGHT_BRACE, "Se esperaba '}' al final del cuerpo de la función.");
+            if (!match(TokenType::RIGHT_BRACE)) {
+                Logger::getInstance().error("Se esperaba '}' al final del cuerpo de la función.");
+                synchronize();
+                return nullptr;
+            }
             return functionNode;
         }
 
@@ -233,12 +251,16 @@ UnqPtr<VarDeclarationNode> Parser::varDecl(const Token& typeToken, const Token& 
     if (match(TokenType::OPERATOR_ASSIGN)) {
         Logger::getInstance().debug("Asignación en declaración de variable");
         varDeclNode->expression = expression();
-        /* if (!expression()) {
+        if (!varDeclNode->expression) {
             Logger::getInstance().debug("Se esperaba una expresión después del '=' en 'varDecl'");
-            throw std::runtime_error("Se esperaba una expresión después del '='.");
-        } */
+            synchronize();
+        }
 
-        consume(TokenType::SEMICOLON, "Se esperaba ';' al final de la declaración.");
+        if (!match(TokenType::SEMICOLON)) {
+            Logger::getInstance().error("Se esperaba ';' al final de la declaración.");
+            synchronize();
+            return nullptr;
+        }
         Logger::getInstance().debug("Declaración de variable con asignación finalizada");
         return varDeclNode;
     }
@@ -347,8 +369,8 @@ UnqPtr<ASTNode> Parser::orExprPrime(UnqPtr<ASTNode> left) {
         Logger::getInstance().debug("Encontrado operador '||'");
         UnqPtr<ASTNode> right = andExpr();
         if (!right) {
-            Logger::getInstance().debug("Se esperaba una expresión después de '||'.");
-            throw std::runtime_error("Se esperaba una expresión después de '||'.");
+            Logger::getInstance().error("Se esperaba una expresión después de '||'.");
+            synchronize();
         }
         auto logicalOrNode = std::make_unique<LogicalOrNode>(std::move(left), previous(), std::move(right));
         return orExprPrime(std::move(logicalOrNode));
@@ -465,7 +487,11 @@ UnqPtr<ASTNode> Parser::factor() {
             Logger::getInstance().debug("Se esperaba una expresión después de '('");
             return nullptr;
         }
-        consume(TokenType::RIGHT_PARENTHESIS, "Se esperaba ')' después de la expresión.");
+        if (!match(TokenType::RIGHT_PARENTHESIS)) {
+            Logger::getInstance().error("Se esperaba ')' después de la expresión.");
+            synchronize();
+            return nullptr;
+        }
         return factorPrime(std::move(exprNode));
     }
     return nullptr;
@@ -484,7 +510,11 @@ UnqPtr<ASTNode> Parser::Parenthesis(UnqPtr<IdentifierNode> identifier) {
                 return nullptr;
             }
         }
-        consume(TokenType::RIGHT_PARENTHESIS,"Se esperaba '}' después de exprList.");
+        if (!match(TokenType::RIGHT_PARENTHESIS)) {
+            Logger::getInstance().error("Se esperaba ')' después de la expresión.");
+            synchronize();
+            return nullptr;
+        }
         auto functionCallNode = std::make_unique<FunctionCallNode>(std::move(identifier), std::move(arguments));
         return functionCallNode;
     }
@@ -806,7 +836,6 @@ UnqPtr<ASTNode> Parser::ifStmt() {
     UnqPtr<ASTNode> condition = expression();
     if (!condition) {
         Logger::getInstance().debug("Se esperaba una expresión dentro del 'if'.");
-        throw std::runtime_error("Se esperaba una expresión dentro del 'if'.");
     }
 
     consume(TokenType::RIGHT_PARENTHESIS, "Se esperaba ')' después de la expresión.");
@@ -882,10 +911,14 @@ UnqPtr<ASTNode> Parser::forStmt() {
     UnqPtr<ASTNode> condition = expression();
     if (!condition) {
         Logger::getInstance().debug("Se esperaba una expresión en la condición del 'for'.");
-        throw std::runtime_error("Se esperaba una expresión en la condición del 'for'.");
+        synchronize();
     }
 
-    consume(TokenType::SEMICOLON, "Se esperaba ';' después de la condición del 'for'.");
+    if (!match(TokenType::SEMICOLON)) {
+        Logger::getInstance().error("Se esperaba ';' después de la condición del 'for'.");
+        synchronize();
+        return nullptr;
+    }
 
     UnqPtr<ASTNode> increment = exprStmt();
     if (!increment) {
@@ -915,10 +948,14 @@ UnqPtr<ASTNode> Parser::returnStmt() {
     UnqPtr<ASTNode> returnExpr = expression();
     if (!returnExpr) {
         Logger::getInstance().debug("Se esperaba una expresión después de 'return'.");
-        throw std::runtime_error("Se esperaba una expresión después de 'return'.");
+        synchronize();
+        // throw std::runtime_error("Se esperaba una expresión después de 'return'.");
     }
 
-    consume(TokenType::SEMICOLON, "Se esperaba ';' después de la expresión de retorno.");
+    if (!match(TokenType::SEMICOLON)) {
+        Logger::getInstance().error("Se esperaba una expresioon despues de 'return'");
+        return nullptr;
+    }
     return std::make_unique<ReturnStatementNode>(std::move(returnExpr));
 }
 
