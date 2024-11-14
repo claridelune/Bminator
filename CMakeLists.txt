@@ -12,6 +12,7 @@ set(SOURCES
     src/scanner/scanner.cpp
     src/utils/logger.cpp
     src/parser/parser.cpp
+    src/AST/ASTPrinterJson.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})

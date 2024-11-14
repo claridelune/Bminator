@@ -1,10 +1,14 @@
 char myChar = 'k';
 
-integer foo(integer f integer g) {
-    return (g ++ f * g)/f;
+integer foo(integer f, integer g) {
+    for (i = 0; i < b; i = i + 1;) {
+        print(var % i);
+    }
+    return (g + f * g)/f;
 }
-// integer foo(integer f, integer g) {
-    // return (g + f * g)/f;
+
+// integer foo(integer f integer g) {
+    // return (g ++ f * g)/f;
 // }
 
 // boolean checkCondition(integer value) {
@@ -16,11 +20,11 @@ integer foo(integer f integer g) {
     // }
 // }
 
-//integer main() {
-    //for (i = 0; i < b; i = i + 1;) {
-        //print(var % i);
-    //}
-    //if (b || ch == 'x') {
+// integer main() {
+    // for (i = 0; i < b; i = i + 1;) {
+        // print(var % i);
+    // }
+    // if (b || ch == 'x') {
         //integer i = 0;
         //integer j = 1;
         //var = foo(i,j);

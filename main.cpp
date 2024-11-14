@@ -4,6 +4,7 @@
 #include "src/AST/AST.h"
 #include "src/AST/ASTVisitor.h"
 #include "src/AST/ASTPrinter.h"
+#include "src/AST/ASTPrinterJson.h"
 #include <fstream>
 
 int main() {
@@ -30,7 +31,8 @@ int main() {
     if (!ast) {
         return 1;
     }
-    ASTPrinter printer;
+    std::string filename = "ASTTree.json";
+    ASTPrinterJson printer(filename);
     ast->Accept(printer);
     return 0;
 }

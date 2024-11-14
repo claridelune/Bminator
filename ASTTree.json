@@ -1,0 +1,111 @@
+[
+  {
+    "id": "ProgramNode0x332061a0",
+    "parent": "",
+    "type": "ProgramNode",
+    "content": "Program Start"
+  },
+  {
+    "id": "VarDeclarationNode0x33207ce0",
+    "parent": "ProgramNode0x332061a0",
+    "type": "VarDeclarationNode",
+    "content": "myChar(char)"
+  },
+  {
+    "id": "LiteralNode0x33207d80",
+    "parent": "VarDeclarationNode0x33207ce0",
+    "type": "LiteralNode",
+    "content": "k"
+  },
+  {
+    "id": "FunctionDeclarationNode0x33207de0",
+    "parent": "ProgramNode0x332061a0",
+    "type": "FunctionDeclarationNode",
+    "content": "foo(integer)"
+  },
+  {
+    "id": "ParamNode0x332061f0",
+    "parent": "FunctionDeclarationNode0x33207de0",
+    "type": "ParamNode",
+    "content": "f(integer)"
+  },
+  {
+    "id": "ParamNode0x33207e90",
+    "parent": "FunctionDeclarationNode0x33207de0",
+    "type": "ParamNode",
+    "content": "g(integer)"
+  },
+  {
+    "id": "CompoundStatementNode0x33207f20",
+    "parent": "FunctionDeclarationNode0x33207de0",
+    "type": "CompoundStatementNode",
+    "content": "Compound Statement"
+  },
+  {
+    "id": "ReturnStatementNode0x331fe0f0",
+    "parent": "FunctionDeclarationNode0x33207de0",
+    "type": "ReturnStatementNode",
+    "content": "Return"
+  },
+  {
+    "id": "BinaryOperationNode0x332081b0",
+    "parent": "ReturnStatementNode0x331fe0f0",
+    "type": "BinaryOperationNode",
+    "content": "/"
+  },
+  {
+    "id": "BinaryOperationNode0x332080e0",
+    "parent": "BinaryOperationNode0x332081b0",
+    "type": "BinaryOperationNode",
+    "content": "+"
+  },
+  {
+    "id": "IdentifierNode0x33207f70",
+    "parent": "BinaryOperationNode0x332080e0",
+    "type": "IdentifierNode",
+    "content": "g"
+  },
+  {
+    "id": "BinaryOperationNode0x331fd2f0",
+    "parent": "BinaryOperationNode0x332080e0",
+    "type": "BinaryOperationNode",
+    "content": "*"
+  },
+  {
+    "id": "IdentifierNode0x33207fd0",
+    "parent": "BinaryOperationNode0x331fd2f0",
+    "type": "IdentifierNode",
+    "content": "f"
+  },
+  {
+    "id": "IdentifierNode0x33208080",
+    "parent": "BinaryOperationNode0x331fd2f0",
+    "type": "IdentifierNode",
+    "content": "g"
+  },
+  {
+    "id": "IdentifierNode0x33208150",
+    "parent": "BinaryOperationNode0x332081b0",
+    "type": "IdentifierNode",
+    "content": "f"
+  },
+  {
+    "simple_chart_config": [
+      "ProgramNode0x332061a0",
+      "VarDeclarationNode0x33207ce0",
+      "LiteralNode0x33207d80",
+      "FunctionDeclarationNode0x33207de0",
+      "ParamNode0x332061f0",
+      "ParamNode0x33207e90",
+      "CompoundStatementNode0x33207f20",
+      "ReturnStatementNode0x331fe0f0",
+      "BinaryOperationNode0x332081b0",
+      "BinaryOperationNode0x332080e0",
+      "IdentifierNode0x33207f70",
+      "BinaryOperationNode0x331fd2f0",
+      "IdentifierNode0x33207fd0",
+      "IdentifierNode0x33208080",
+      "IdentifierNode0x33208150"
+    ]
+  }
+]

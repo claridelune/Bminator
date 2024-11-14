@@ -66,7 +66,13 @@ public:
     }
 };
 
-class DeclarationNode : public ASTNode {};
+class DeclarationNode : public ASTNode {
+public:
+    void Accept(ASTNodeVisitor& v) override = 0;
+    void SetChildrenPrintID(const std::string& pID) override {
+        parentID = pID;
+    }
+};
 
 class VarDeclarationNode : public DeclarationNode {
 public:
