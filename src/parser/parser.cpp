@@ -59,13 +59,15 @@ bool Parser::check(TokenType type) {
 }
 
 UnqPtr<ASTNode> Parser::consume(TokenType type, const std::string& message) {
+    Logger::getInstance().debug("Trying to consume " + tokens[current].value);
     if (!match(type)) {
         Logger::getInstance().error(message);
         synchronize();
         return nullptr;
     }
-    Logger::getInstance().debug(message);
-    throw std::runtime_error(message);
+    Logger::getInstance().debug("CONSUMED and current token is " + tokens[current].value);
+    return nullptr;
+    //throw std::runtime_error(message);
 }
 
 void Parser::synchronize() {
@@ -141,7 +143,7 @@ UnqPtr<ASTNode> Parser::declaration() {
             Logger::getInstance().debug("Encontrado identificador en 'declaration': " + previous().value);
             return declarationPrime(typeToken, identifierToken);
         } else {
-            Logger::getInstance().debug("Se esperaba un identificador después del tipo en 'declaration'.");
+            Logger::getInstance().error("Se esperaba un identificador después del tipo en 'declaration'.");
             synchronize();
             return nullptr;
             //throw std::runtime_error("Se esperaba un identificador después del tipo.");
@@ -407,8 +409,9 @@ UnqPtr<ASTNode> Parser::andExprPrime(UnqPtr<ASTNode> left) {
         Logger::getInstance().debug("Encontrado operador '&&'");
         UnqPtr<ASTNode> right = eqExpr();
         if (!right) {
-            Logger::getInstance().debug("Se esperaba una expresión después de '&&'.");
-            throw std::runtime_error("Se esperaba una expresión después de '&&'.");
+            Logger::getInstance().error("Se esperaba una expresión después de '&&'.");
+            synchronize();
+            //throw std::runtime_error("Se esperaba una expresión después de '&&'.");
         }
         auto logicalAndNode = std::make_unique<LogicalAndNode>(std::move(left), previous(), std::move(right));
         return andExprPrime(std::move(logicalAndNode));
@@ -902,7 +905,11 @@ UnqPtr<ASTNode> Parser::forStmt() {
 
     consume(TokenType::LEFT_PARENTHESIS, "Se esperaba '(' después de 'for'.");
 
+    Logger::getInstance().debug("TEST1");
+
     UnqPtr<ASTNode> init = exprStmt();
+
+    Logger::getInstance().debug("TEST2");
     if (!init) {
         Logger::getInstance().error("Error en 'exprStmt' dentro de 'forStmt'");
         return nullptr;
