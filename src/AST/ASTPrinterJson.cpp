@@ -60,10 +60,10 @@ void ASTPrinterJson::PrintAST(ProgramNode* root) {
 
 void ASTPrinterJson::Visit(ProgramNode& node) {
     const std::string programNodeID = Util::GenerateID(&node, "ProgramNode");
-    WriteNode("ProgramNode", "Program Start", &node, "");  // Raíz del árbol, sin parentID
+    WriteNode("ProgramNode", "Program Start", &node, "");
     
     for (const auto& decl : node.declarations) {
-        decl->parentID = programNodeID;  // Asignamos el parentID explícitamente
+        decl->parentID = programNodeID;
         decl->Accept(*this);
     }
 }
@@ -77,7 +77,7 @@ void ASTPrinterJson::Visit(VarDeclarationNode& node) {
     WriteNode("VarDeclarationNode", node.identifier.value + "(" + node.type.value + ")", &node, node.parentID);
 
     if (node.expression) {
-        node.expression->parentID = varDeclID;  // Establecemos el parentID explícitamente para el literal
+        node.expression->parentID = varDeclID;
         node.expression->Accept(*this);
     }
 }
@@ -87,12 +87,12 @@ void ASTPrinterJson::Visit(FunctionDeclarationNode& node) {
     WriteNode("FunctionDeclarationNode", node.functionName.value + "(" + node.returnType.value + ")", &node, node.parentID);
 
     for (const auto& param : node.parameters) {
-        param->parentID = functionNodeID;  // Establecemos el parentID explícitamente para cada parámetro
+        param->parentID = functionNodeID;
         param->Accept(*this);
     }
 
     if (node.body) {
-        node.body->parentID = functionNodeID;  // Establecemos el parentID explícitamente para el cuerpo de la función
+        node.body->parentID = functionNodeID;
         node.body->Accept(*this);
     }
 }
@@ -104,7 +104,7 @@ void ASTPrinterJson::Visit(ParamNode& node) {
 void ASTPrinterJson::Visit(ParamListNode& node) {
     WriteNode("ParamListNode", "Parameter List", &node, node.parentID);
     for (const auto& param : node.parameters) {
-        param->parentID = node.parentID;  // Propagamos el parentID en la lista de parámetros
+        param->parentID = node.parentID;
         param->Accept(*this);
     }
 }
@@ -233,13 +233,13 @@ void ASTPrinterJson::Visit(PrintStatementNode& node) {
 }
 
 void ASTPrinterJson::Visit(ExpressionStatementNode& node) {
-    WriteNode("ExpressionStatementNode", "Expression Statement", &node, node.parentID);
+    // WriteNode("ExpressionStatementNode", "Expression Statement", &node, node.parentID);
     node.expression->parentID = node.parentID;
     node.expression->Accept(*this);
 }
 
 void ASTPrinterJson::Visit(CompoundStatementNode& node) {
-    WriteNode("CompoundStatementNode", "Compound Statement", &node, node.parentID);
+    // WriteNode("CompoundStatementNode", "Compound Statement", &node, node.parentID);
     for (const auto& stmt : node.statements) {
         stmt->parentID = node.parentID;
         stmt->Accept(*this);
@@ -247,7 +247,7 @@ void ASTPrinterJson::Visit(CompoundStatementNode& node) {
 }
 
 void ASTPrinterJson::Visit(ExprListNode& node) {
-    WriteNode("ExprListNode", "Expression List", &node, node.parentID);
+    // WriteNode("ExprListNode", "Expression List", &node, node.parentID);
     for (const auto& expr : node.expressions) {
         expr->parentID = node.parentID;
         expr->Accept(*this);
