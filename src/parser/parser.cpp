@@ -20,7 +20,7 @@ bool Parser::parse() {
 
 UnqPtr<ProgramNode> Parser::getAST() {
     if (failed) {
-        Logger::getInstance().error("El análisis falló. No se construyó el AST.");
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "El análisis falló. No se construyó el AST.");
         return nullptr;
     }
     return std::unique_ptr<ProgramNode>(static_cast<ProgramNode*>(root.release()));
@@ -61,7 +61,7 @@ bool Parser::check(TokenType type) {
 UnqPtr<ASTNode> Parser::consume(TokenType type, const std::string& message) {
     Logger::getInstance().debug("Trying to consume " + tokens[current].value);
     if (!match(type)) {
-        Logger::getInstance().error(message);
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + message);
         synchronize();
         return nullptr;
     }
@@ -116,13 +116,13 @@ bool Parser::programPrime() {
     }
 
     if (!checkForDeclarationStart()) {
-        Logger::getInstance().error("No se encontró un tipo de dato válido en 'programPrime' para " + tokens[current].value);
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "No se encontró un tipo de dato válido en 'programPrime' para " + tokens[current].value);
         synchronize();
         return false;
     }
 
     if (!declaration()) {
-        Logger::getInstance().error("Error en 'declaration' dentro de 'programPrime' para " + tokens[current].value);
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'declaration' dentro de 'programPrime' para " + tokens[current].value);
         synchronize();
         return false;
     }
@@ -143,14 +143,15 @@ UnqPtr<ASTNode> Parser::declaration() {
             Logger::getInstance().debug("Encontrado identificador en 'declaration': " + previous().value);
             return declarationPrime(typeToken, identifierToken);
         } else {
-            Logger::getInstance().error("Se esperaba un identificador después del tipo en 'declaration'.");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba un identificador después del tipo en 'declaration'.");
             synchronize();
             return nullptr;
             //throw std::runtime_error("Se esperaba un identificador después del tipo.");
         }
     }
 
-    Logger::getInstance().error("Error en 'declaration', no se encontró un tipo válido para " + tokens[current].value);
+    //Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'declaration', no se encontró un tipo válido para " + tokens[current].value + " quizás olvidaste un ';'");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en la declaración, no se esperaba " + tokens[current].value + " quizás olvidaste un ';'");
     synchronize();
     return nullptr;
 }
@@ -163,7 +164,7 @@ UnqPtr<ASTNode> Parser::declarationPrime(const Token& typeToken, const Token& id
     Logger::getInstance().debug("Analizando 'declarationPrime' con: " + tokens[current].value);
     if (check(TokenType::LEFT_PARENTHESIS)) return function(typeToken, identifierToken);
     if (check(TokenType::OPERATOR_ASSIGN)) return varDecl(typeToken, identifierToken);
-    Logger::getInstance().error("Se esperaba un '(' o un operador de asignación en lugar de: " + tokens[current].value);
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba un '(' o un operador de asignación en lugar de: " + tokens[current].value);
     synchronize();
     return nullptr;
 }
@@ -177,12 +178,12 @@ UnqPtr<FunctionDeclarationNode> Parser::function(const Token& typeToken, const T
     
     if (match(TokenType::LEFT_PARENTHESIS) && params(functionNode->parameters)) {
         if (!match(TokenType::RIGHT_PARENTHESIS)) {
-            Logger::getInstance().error("Se esperaba ')' al final de los parámetros.");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba ')' al final de los parámetros.");
             synchronize();
             return nullptr;
         }
         if (!match(TokenType::LEFT_BRACE)) {
-            Logger::getInstance().error("Se esperaba '{' al inicio del cuerpo de la función.");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba '{' al inicio del cuerpo de la función.");
             synchronize();
             return nullptr;
         }
@@ -191,17 +192,17 @@ UnqPtr<FunctionDeclarationNode> Parser::function(const Token& typeToken, const T
         
         if (functionNode->body) {
             if (!match(TokenType::RIGHT_BRACE)) {
-                Logger::getInstance().error("Se esperaba '}' al final del cuerpo de la función.");
+                Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba '}' al final del cuerpo de la función.");
                 synchronize();
                 return nullptr;
             }
             return functionNode;
         }
 
-        Logger::getInstance().error("Error en la declaración de la función.");
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en la declaración de la función.");
         // throw std::runtime_error("Error en la declaración de la función.");
     }
-    Logger::getInstance().error("Se esperaba una declaración de tipo (content)");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba una declaración de tipo (content)");
     synchronize();
     return nullptr;
 }
@@ -225,11 +226,11 @@ bool Parser::params(std::vector<UnqPtr<ParamNode>>& parameters) {
                 return params(parameters);
             }
             return true;
-            /* Logger::getInstance().error("Se esperaban parámetros válidos");
+            /* Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaban parámetros válidos");
             synchronize();
             return false; */
         }
-        Logger::getInstance().error("Se esperaba un identificador después del tipo en 'params'.");
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba un identificador después del tipo en 'params'.");
         synchronize();
         //throw std::runtime_error("Se esperaba un identificador después del tipo en 'params'.");
     }
@@ -238,7 +239,7 @@ bool Parser::params(std::vector<UnqPtr<ParamNode>>& parameters) {
         Logger::getInstance().debug("Epsilon encontrado en 'params'");
         return true;
     }
-    Logger::getInstance().error("Error en 'params': token inesperado: " + tokens[current].value);
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'params': token inesperado: " + tokens[current].value);
     synchronize();
     return false;
 }
@@ -259,7 +260,7 @@ UnqPtr<VarDeclarationNode> Parser::varDecl(const Token& typeToken, const Token& 
         }
 
         if (!match(TokenType::SEMICOLON)) {
-            Logger::getInstance().error("Se esperaba ';' al final de la declaración.");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba ';' al final de la declaración.");
             synchronize();
             return nullptr;
         }
@@ -271,7 +272,7 @@ UnqPtr<VarDeclarationNode> Parser::varDecl(const Token& typeToken, const Token& 
         return varDeclNode;
     }
 
-    Logger::getInstance().error("Error en 'varDecl', se esperaba ';' o '='.");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'varDecl', se esperaba ';' o '='.");
     return nullptr;
 }
 
@@ -282,7 +283,7 @@ UnqPtr<ExprListNode> Parser::exprList() {
     UnqPtr<ASTNode> exprNode = expression();
     Logger::getInstance().debug("Analizando 'exprList' con: " + tokens[current].value);
     if (!exprNode) {
-        Logger::getInstance().error("Error en 'expression' dentro de 'exprList'");
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'expression' dentro de 'exprList'");
         return nullptr;
     }
     exprListNode->AddExpression(std::move(exprNode));
@@ -300,7 +301,7 @@ bool Parser::exprListPrime(UnqPtr<ExprListNode>& exprListNode) {
     if (match(TokenType::COMMA)) {
         UnqPtr<ASTNode> exprNode = expression();
         if (!exprNode) {
-            Logger::getInstance().error("Error en 'exprList' después de ',' en 'exprListPrime'");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'exprList' después de ',' en 'exprListPrime'");
             return false;
         }
         exprListNode->AddExpression(std::move(exprNode));
@@ -310,7 +311,7 @@ bool Parser::exprListPrime(UnqPtr<ExprListNode>& exprListNode) {
         Logger::getInstance().debug("Epsilon encontrado en 'exprListPrime'");
         return true;
     }
-    Logger::getInstance().error("Error en 'exprListPrime': token inesperado");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'exprListPrime': token inesperado");
     return false;
 }
 
@@ -337,7 +338,7 @@ UnqPtr<ASTNode> Parser::expressionPrime(UnqPtr<ASTNode> left) {
 
         UnqPtr<ASTNode> right = orExpr();
         if (!right) {
-            Logger::getInstance().error("Error en 'orExpr' después de operador de asignación en 'expressionPrime'");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'orExpr' después de operador de asignación en 'expressionPrime'");
             return nullptr;
         }
         return std::make_unique<AssignmentNode>(std::move(left), previous(), std::move(right));;
@@ -347,7 +348,7 @@ UnqPtr<ASTNode> Parser::expressionPrime(UnqPtr<ASTNode> left) {
         Logger::getInstance().debug("Epsilon encontrado en 'expressionPrime'");
         return left;
     }
-    Logger::getInstance().error("Error en 'expressionPrime': token inesperado");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'expressionPrime': token inesperado");
     return nullptr;
 }
 
@@ -371,7 +372,7 @@ UnqPtr<ASTNode> Parser::orExprPrime(UnqPtr<ASTNode> left) {
         Logger::getInstance().debug("Encontrado operador '||'");
         UnqPtr<ASTNode> right = andExpr();
         if (!right) {
-            Logger::getInstance().error("Se esperaba una expresión después de '||'.");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba una expresión después de '||'.");
             synchronize();
         }
         auto logicalOrNode = std::make_unique<LogicalOrNode>(std::move(left), previous(), std::move(right));
@@ -384,7 +385,7 @@ UnqPtr<ASTNode> Parser::orExprPrime(UnqPtr<ASTNode> left) {
         return left;
     }
 
-    Logger::getInstance().error("Error en 'orExprPrime': token inesperado");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'orExprPrime': token inesperado");
     return nullptr;
 }
 
@@ -409,7 +410,7 @@ UnqPtr<ASTNode> Parser::andExprPrime(UnqPtr<ASTNode> left) {
         Logger::getInstance().debug("Encontrado operador '&&'");
         UnqPtr<ASTNode> right = eqExpr();
         if (!right) {
-            Logger::getInstance().error("Se esperaba una expresión después de '&&'.");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba una expresión después de '&&'.");
             synchronize();
             //throw std::runtime_error("Se esperaba una expresión después de '&&'.");
         }
@@ -428,7 +429,7 @@ UnqPtr<ASTNode> Parser::andExprPrime(UnqPtr<ASTNode> left) {
         return left;
     }
 
-    Logger::getInstance().error("Error en 'andExprPrime': token inesperado");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'andExprPrime': token inesperado");
     return nullptr;
 }
 
@@ -491,7 +492,7 @@ UnqPtr<ASTNode> Parser::factor() {
             return nullptr;
         }
         if (!match(TokenType::RIGHT_PARENTHESIS)) {
-            Logger::getInstance().error("Se esperaba ')' después de la expresión.");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba ')' después de la expresión.");
             synchronize();
             return nullptr;
         }
@@ -514,7 +515,7 @@ UnqPtr<ASTNode> Parser::Parenthesis(UnqPtr<IdentifierNode> identifier) {
             }
         }
         if (!match(TokenType::RIGHT_PARENTHESIS)) {
-            Logger::getInstance().error("Se esperaba ')' después de la expresión.");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba ')' después de la expresión.");
             synchronize();
             return nullptr;
         }
@@ -598,7 +599,7 @@ UnqPtr<ASTNode> Parser::termPrime(UnqPtr<ASTNode> left) {
         Token op = previous();
         UnqPtr<ASTNode> right = unary();
         if (!right) {
-            Logger::getInstance().error("Error en 'unary' después de operador en 'termPrime'");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'unary' después de operador en 'termPrime'");
             return nullptr;
         }
         auto binOpNode = std::make_unique<BinaryOperationNode>(std::move(left), op, std::move(right));
@@ -616,7 +617,7 @@ UnqPtr<ASTNode> Parser::termPrime(UnqPtr<ASTNode> left) {
         return left;
     }
 
-    Logger::getInstance().error("Error en 'termPrime': token inesperado");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'termPrime': token inesperado");
     return nullptr;
 }
 
@@ -661,7 +662,7 @@ UnqPtr<ASTNode> Parser::eqExprPrime(UnqPtr<ASTNode> left) {
         Token op = previous();
         UnqPtr<ASTNode> right = relExpr();
         if (!right) {
-            Logger::getInstance().error("Error en 'relExpr' después de operador en 'eqExprPrime'");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'relExpr' después de operador en 'eqExprPrime'");
             return nullptr;
         }
         auto equalityNode = std::make_unique<EqualityNode>(std::move(left), op, std::move(right));
@@ -675,7 +676,7 @@ UnqPtr<ASTNode> Parser::eqExprPrime(UnqPtr<ASTNode> left) {
         Logger::getInstance().debug("Epsilon encontrado en 'eqExprPrime'");
         return left;
     }
-    Logger::getInstance().error("Error en 'eqExprPrime': token inesperado");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'eqExprPrime': token inesperado");
     return nullptr;
 }
 
@@ -719,7 +720,7 @@ UnqPtr<ASTNode> Parser::relExprPrime(UnqPtr<ASTNode> left) {
 
         UnqPtr<ASTNode> right = expr();
         if (!right) {
-            Logger::getInstance().error("Error en 'expr' después de operador en 'relExprPrime'");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'expr' después de operador en 'relExprPrime'");
             return nullptr;
         }
 
@@ -735,7 +736,7 @@ UnqPtr<ASTNode> Parser::relExprPrime(UnqPtr<ASTNode> left) {
         return left;
     }
 
-    Logger::getInstance().error("Error en 'relExprPrime': token inesperado");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'relExprPrime': token inesperado");
     return nullptr;
 }
 
@@ -772,7 +773,7 @@ UnqPtr<ASTNode> Parser::exprPrime(UnqPtr<ASTNode> left) {
         Token op = previous();
         UnqPtr<ASTNode> right = term();
         if (!right) {
-            Logger::getInstance().error("Error en 'term' después de operador en 'exprPrime'");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'term' después de operador en 'exprPrime'");
             return nullptr;
         }
         auto binOpNode = std::make_unique<BinaryOperationNode>(std::move(left), op, std::move(right));
@@ -788,7 +789,7 @@ UnqPtr<ASTNode> Parser::exprPrime(UnqPtr<ASTNode> left) {
         Logger::getInstance().debug("Epsilon encontrado en 'exprPrime'");
         return left;
     }
-    Logger::getInstance().error("Error en 'exprPrime': token inesperado");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'exprPrime': token inesperado");
     return nullptr;
 }
 
@@ -815,7 +816,7 @@ UnqPtr<ASTNode> Parser::statement() {
     } else if (match(TokenType::LEFT_BRACE)) {
         UnqPtr<ASTNode> blockNode = stmtList();
         if (!blockNode) {
-            Logger::getInstance().error("Se espera stmtList despues de { en 'statement'");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se espera stmtList despues de { en 'statement'");
             return nullptr;
         }
         consume(TokenType::RIGHT_BRACE, "Se espera } despues de stmtList");
@@ -850,7 +851,7 @@ UnqPtr<ASTNode> Parser::ifStmt() {
     UnqPtr<ASTNode> ifBody = stmtList();
 
     if (!ifBody) {
-        Logger::getInstance().error("Error en 'statement' dentro de 'ifStmt'");
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'statement' dentro de 'ifStmt'");
         return nullptr;
     }
 
@@ -870,7 +871,7 @@ UnqPtr<ASTNode> Parser::ifStmtPrime() {
 
         UnqPtr<ASTNode> elseBody = stmtList();
         if (!elseBody) {
-            Logger::getInstance().error("Error en 'statement' dentro de 'ifStmtPrime'");
+            Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'statement' dentro de 'ifStmtPrime'");
             return nullptr;
         }
         consume(TokenType::RIGHT_BRACE, "Se esperaba '}' después del bloque de 'else'.");
@@ -892,7 +893,7 @@ UnqPtr<ASTNode> Parser::ifStmtPrime() {
         return nullptr;
     }
 
-    Logger::getInstance().error("Error en 'ifStmtPrime': token inesperado");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'ifStmtPrime': token inesperado");
     return nullptr;
 }
 
@@ -911,7 +912,7 @@ UnqPtr<ASTNode> Parser::forStmt() {
 
     Logger::getInstance().debug("TEST2");
     if (!init) {
-        Logger::getInstance().error("Error en 'exprStmt' dentro de 'forStmt'");
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'exprStmt' dentro de 'forStmt'");
         return nullptr;
     }
     
@@ -922,14 +923,14 @@ UnqPtr<ASTNode> Parser::forStmt() {
     }
 
     if (!match(TokenType::SEMICOLON)) {
-        Logger::getInstance().error("Se esperaba ';' después de la condición del 'for'.");
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba ';' después de la condición del 'for'.");
         synchronize();
         return nullptr;
     }
 
     UnqPtr<ASTNode> increment = exprStmt();
     if (!increment) {
-        Logger::getInstance().error("Error en 'exprStmt' después de ';' en 'forStmt'");
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'exprStmt' después de ';' en 'forStmt'");
         return nullptr;
     }
 
@@ -960,7 +961,7 @@ UnqPtr<ASTNode> Parser::returnStmt() {
     }
 
     if (!match(TokenType::SEMICOLON)) {
-        Logger::getInstance().error("Se esperaba una expresioon despues de 'return'");
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Se esperaba una expresión despues de 'return'");
         return nullptr;
     }
     return std::make_unique<ReturnStatementNode>(std::move(returnExpr));
@@ -977,7 +978,7 @@ UnqPtr<ASTNode> Parser::printStmt() {
 
     UnqPtr<ExprListNode> exprListNode = exprList();
     if (!exprListNode) {
-        Logger::getInstance().error("Error en 'exprList' dentro de 'printStmt'");
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'exprList' dentro de 'printStmt'");
         return nullptr;
     }
 
@@ -1006,7 +1007,7 @@ UnqPtr<ASTNode> Parser::stmtList() {
     auto compoundNode = std::make_unique<CompoundStatementNode>();
     UnqPtr<ASTNode> stmtNode = statement();
     if (!stmtNode) {
-        Logger::getInstance().error("Error en 'statement' dentro de 'stmtList'");
+        Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'statement' dentro de 'stmtList'");
         return nullptr;
     }
     compoundNode->AddStatement(std::move(stmtNode));
@@ -1030,7 +1031,7 @@ bool Parser::stmtListPrime(UnqPtr<CompoundStatementNode>& compoundNode) {
         return true;
     }
 
-    Logger::getInstance().error("Error en 'stmtListPrime': token inesperado");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'stmtListPrime': token inesperado");
     return false;
 }
 
@@ -1068,7 +1069,7 @@ bool Parser::typePrime() {
         return true;
     }
 
-    Logger::getInstance().error("Error en 'typePrime', no se encontró un token válido.");
+    Logger::getInstance().error("Line " + std::to_string(tokens[current].line ) + " " + "Error en 'typePrime', no se encontró un token válido.");
     return false;
 }
 
