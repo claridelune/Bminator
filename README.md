@@ -6,7 +6,12 @@
 ```
 
 ### Run
-
+### Programa
 ```
 ./build/bminor
+```
+
+### Visualizacion
+```
+python visualizer.py
 ```
