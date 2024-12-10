@@ -233,23 +233,26 @@ void ASTPrinterJson::Visit(PrintStatementNode& node) {
 }
 
 void ASTPrinterJson::Visit(ExpressionStatementNode& node) {
-    // WriteNode("ExpressionStatementNode", "Expression Statement", &node, node.parentID);
-    node.expression->parentID = node.parentID;
+    const std::string ExpressionStatementNodeID = Util::GenerateID(&node, "ExpressionStatementNode");
+    WriteNode("ExpressionStatementNode", "Expression Statement", &node, node.parentID);
+    node.expression->parentID = ExpressionStatementNodeID;
     node.expression->Accept(*this);
 }
 
 void ASTPrinterJson::Visit(CompoundStatementNode& node) {
-    // WriteNode("CompoundStatementNode", "Compound Statement", &node, node.parentID);
+    const std::string CompoundStatementNodeID = Util::GenerateID(&node, "CompoundStatementNode");
+    WriteNode("CompoundStatementNode", "Compound Statement", &node, node.parentID);
     for (const auto& stmt : node.statements) {
-        stmt->parentID = node.parentID;
+        stmt->parentID = CompoundStatementNodeID;
         stmt->Accept(*this);
     }
 }
 
 void ASTPrinterJson::Visit(ExprListNode& node) {
-    // WriteNode("ExprListNode", "Expression List", &node, node.parentID);
+    const std::string ExprListNodeID = Util::GenerateID(&node, "ExprListNode");
+    WriteNode("ExprListNode", "Expression List", &node, node.parentID);
     for (const auto& expr : node.expressions) {
-        expr->parentID = node.parentID;
+        expr->parentID = ExprListNodeID;
         expr->Accept(*this);
     }
 }
