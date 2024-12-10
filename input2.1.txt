@@ -1,0 +1,13 @@
+integer foo(integer f, integer g) {
+    integer i;
+    integer b;
+    for (i = 0; i < b; i = i + 1;) {
+        f = f + 1;
+        integer var;
+        print(var % i);
+    }
+    string s = "palabra";
+    s = 1;
+    //return (g + f * g) / f;
+    return s;
+}

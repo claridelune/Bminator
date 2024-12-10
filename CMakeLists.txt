@@ -13,6 +13,8 @@ set(SOURCES
     src/utils/logger.cpp
     src/parser/parser.cpp
     src/AST/ASTPrinterJson.cpp
+    src/Semantics/SemanticAnalyzer.cpp
+    src/Semantics/Symbol.cpp
 )
 
 add_executable(${PROJECT_NAME} ${SOURCES})
