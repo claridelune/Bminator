@@ -56,6 +56,19 @@ public:
     void Render() const override;
 };
 
+class FunctionSymbol : public Symbol {
+public:
+    FunctionSymbol(const std::string& n, const Symbol* retType)
+        : Symbol(n, "0", retType) {}
+    ~FunctionSymbol() override = default;
+
+    void Render() const override;
+
+    bool IsCompatibleWith(const Symbol* other) const override {
+        return false;
+    }
+};
+
 class SymbolTable {
 private:
     std::map<std::string, std::unique_ptr<Symbol>> symbols;

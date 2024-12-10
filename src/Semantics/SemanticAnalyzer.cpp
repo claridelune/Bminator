@@ -4,7 +4,8 @@
 
 SemanticAnalyzer::SemanticAnalyzer()
     : currentScope(nullptr), hasError(false) {
-
+    
+    // tabla global
     auto globalScope = std::make_unique<SymbolTable>("GLOBAL", 0);
     currentScope = globalScope.get();
 
@@ -67,6 +68,20 @@ void SemanticAnalyzer::Visit(VarDeclarationNode& node) {
         logger.error("Redefinition of variable '" + varName + "' at line " + std::to_string(node.identifier.line));
         hasError = true;
     }
+
+    if (node.expression) {
+        node.expression->Accept(*this);
+        const Symbol* exprType = GetNodeType(node.expression.get());
+        if (exprType && exprType->GetName() != typeSymbol->GetName()) {
+            logger.error("Type mismatch in initialization of variable '" + varName +
+                         "' at line " + std::to_string(node.identifier.line) +
+                         ". Expected: " + typeSymbol->GetName() +
+                         ", Found: " + exprType->GetName() + ".");
+            hasError = true;
+        }
+    }
+
+    SetNodeType(&node, typeSymbol);
 }
 
 void SemanticAnalyzer::Visit(FunctionDeclarationNode& node) {
@@ -79,6 +94,14 @@ void SemanticAnalyzer::Visit(FunctionDeclarationNode& node) {
                      "' at line " + std::to_string(node.returnType.line));
         hasError = true;
         return;
+    }
+
+    if (currentScope->GetScopeLevel() == 0) {
+        if (!currentScope->DefineSymbol(std::make_unique<FunctionSymbol>(node.functionName.value, returnTypeSymbol))) {
+            logger.error("Redefinition of function '" + node.functionName.value + "' at line " + std::to_string(node.functionName.line));
+            hasError = true;
+            return;
+        }
     }
 
     SymbolTable* functionScope = CreateNewScope(node.functionName.value);
@@ -110,6 +133,8 @@ void SemanticAnalyzer::Visit(ParamNode& node) {
         logger.error("Redefinition of parameter '" + paramName + "'");
         hasError = true;
     }
+
+    SetNodeType(&node, paramTypeSymbol);
 }
 
 void SemanticAnalyzer::Visit(ParamListNode& node) {
@@ -121,17 +146,52 @@ void SemanticAnalyzer::Visit(ParamListNode& node) {
 void SemanticAnalyzer::Visit(ExpressionNode& node) {}
 
 void SemanticAnalyzer::Visit(AssignmentNode& node) {
+    Logger& logger = Logger::getInstance();
+
     node.left->Accept(*this);
     node.right->Accept(*this);
+
+    const Symbol* leftType = GetNodeType(node.left.get());
+    const Symbol* rightType = GetNodeType(node.right.get());
+
+    if (leftType && rightType && !leftType->IsCompatibleWith(rightType)) {
+        logger.error("Type mismatch in assignment at line " + std::to_string(node.op.line));
+        hasError = true;
+    }
+
+    SetNodeType(&node, leftType);
 }
 
 void SemanticAnalyzer::Visit(BinaryOperationNode& node) {
+    Logger& logger = Logger::getInstance();
     node.left->Accept(*this);
     node.right->Accept(*this);
+
+    const Symbol* leftType = GetNodeType(node.left.get());
+    const Symbol* rightType = GetNodeType(node.right.get());
+    if (leftType && rightType) {
+        if (leftType->GetName() == rightType->GetName()) {
+            SetNodeType(&node, leftType);
+        } else {
+            logger.error("Type mismatch for operator '" + node.op.value +
+                         "' at line " + std::to_string(node.op.line) +
+                         ". Found: (" + leftType->GetName() + ", " + rightType->GetName() + ").");
+            hasError = true;
+        }
+    }
 }
 
 void SemanticAnalyzer::Visit(UnaryOperationNode& node) {
+    Logger& logger = Logger::getInstance();
     node.expr->Accept(*this);
+    
+    const Symbol* exprType = GetNodeType(node.expr.get());
+    if (exprType) {
+        SetNodeType(&node, exprType);
+    } else {
+        logger.error("Undefined type in unary operation at line " + std::to_string(node.op.line));
+        hasError = true;
+    }
 }
 
 void SemanticAnalyzer::Visit(LiteralNode& node) {
@@ -260,10 +320,22 @@ void SemanticAnalyzer::Visit(ExprListNode& node) {
 }
 
 void SemanticAnalyzer::Visit(FunctionCallNode& node) {
-    node.functionName->Accept(*this);
+    Logger& logger = Logger::getInstance();
+
+    const Symbol* functionSymbol = currentScope->LookUpSymbol(node.functionName->identifier.value);
+    if (!functionSymbol) {
+        logger.error("Undefined identifier '" + node.functionName->identifier.value +
+                     "' at line " + std::to_string(node.functionName->identifier.line));
+        hasError = true;
+        return;
+    }
+
+    // TODO: validar args
     if (node.arguments) {
         node.arguments->Accept(*this);
     }
+
+    SetNodeType(&node, functionSymbol->type);
 }
 
 void SemanticAnalyzer::Visit(IndexingNode& node) {

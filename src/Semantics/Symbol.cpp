@@ -14,6 +14,10 @@ void NestedScopeSymbol::Render() const {
     std::cout << "Nested Scope Symbol: " << name << "\n";
 }
 
+void FunctionSymbol::Render() const {
+    std::cout << "Function Symbol: " << name << ", Return Type: " << type->GetName() << std::endl;
+}
+
 SymbolTable::SymbolTable(const std::string& name, int level, SymbolTable* parent)
     : scopeName(name), scopeLevel(level), parentScope(parent) {}
 
