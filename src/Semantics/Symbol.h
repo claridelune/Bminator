@@ -58,9 +58,15 @@ public:
 
 class FunctionSymbol : public Symbol {
 public:
+    std::vector<const Symbol*> parameterTypes;
+
     FunctionSymbol(const std::string& n, const Symbol* retType)
         : Symbol(n, "0", retType) {}
     ~FunctionSymbol() override = default;
+
+    void AddParameterType(const Symbol* type);
+
+    const std::vector<const Symbol*>& GetParameterTypes() const;
 
     void Render() const override;
 

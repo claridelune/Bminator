@@ -97,7 +97,22 @@ void SemanticAnalyzer::Visit(FunctionDeclarationNode& node) {
     }
 
     if (currentScope->GetScopeLevel() == 0) {
-        if (!currentScope->DefineSymbol(std::make_unique<FunctionSymbol>(node.functionName.value, returnTypeSymbol))) {
+        auto functionSymbol = std::make_unique<FunctionSymbol>(node.functionName.value, returnTypeSymbol);
+
+        for (const auto& param : node.parameters) {
+            const std::string& paramTypeName = param->type.value;
+            const Symbol* paramTypeSymbol = currentScope->LookUpSymbol(paramTypeName);
+
+            if (!paramTypeSymbol) {
+                logger.error("Undefined type '" + paramTypeName + "' for parameter '" + param->identifier.value +
+                             "' at line " + std::to_string(param->type.line));
+                hasError = true;
+            } else {
+                functionSymbol->AddParameterType(paramTypeSymbol);
+            }
+        }
+        
+        if (!currentScope->DefineSymbol(std::move(functionSymbol))) {
             logger.error("Redefinition of function '" + node.functionName.value + "' at line " + std::to_string(node.functionName.line));
             hasError = true;
             return;
@@ -201,6 +216,8 @@ void SemanticAnalyzer::Visit(LiteralNode& node) {
         SetNodeType(&node, currentScope->LookUpSymbol("string"));
     } else if (node.literal.type == TokenType::LITERAL_CHAR) {
         SetNodeType(&node, currentScope->LookUpSymbol("char"));
+    } else if (node.literal.type == TokenType::KEYWORD_BOOLEAN) {
+        SetNodeType(&node, currentScope->LookUpSymbol("boolean"));
     } 
 }
 
@@ -323,6 +340,8 @@ void SemanticAnalyzer::Visit(FunctionCallNode& node) {
     Logger& logger = Logger::getInstance();
 
     const Symbol* functionSymbol = currentScope->LookUpSymbol(node.functionName->identifier.value);
+    const FunctionSymbol* funcSymbol = dynamic_cast<const FunctionSymbol*>(functionSymbol);
+
     if (!functionSymbol) {
         logger.error("Undefined identifier '" + node.functionName->identifier.value +
                      "' at line " + std::to_string(node.functionName->identifier.line));
@@ -330,9 +349,35 @@ void SemanticAnalyzer::Visit(FunctionCallNode& node) {
         return;
     }
 
-    // TODO: validar args
+    const auto& expectedParams = funcSymbol->GetParameterTypes();
+
+    std::vector<const Symbol*> argumentTypes;
     if (node.arguments) {
+        for (const auto &arg : node.arguments->expressions) {
+            arg->Accept(*this);
+            argumentTypes.push_back(GetNodeType(arg.get()));
+        }
         node.arguments->Accept(*this);
+    }
+
+    if (expectedParams.size() != argumentTypes.size()) {
+        logger.error("Incorrect number of arguments for function '" + node.functionName->identifier.value +
+                     "' at line " + std::to_string(node.functionName->identifier.line) +
+                     ". Expected: " + std::to_string(expectedParams.size()) +
+                     ", Found: " + std::to_string(argumentTypes.size()) + ".");
+        hasError = true;
+        return;
+    }
+
+        for (size_t i = 0; i < expectedParams.size(); ++i) {
+        if (!expectedParams[i]->IsCompatibleWith(argumentTypes[i])) {
+            logger.error("Type mismatch in argument " + std::to_string(i + 1) + " for function '" +
+                         node.functionName->identifier.value + "' at line " +
+                         std::to_string(node.functionName->identifier.line) +
+                         ". Expected: " + expectedParams[i]->GetName() +
+                         ", Found: " + (argumentTypes[i] ? argumentTypes[i]->GetName() : "undefined") + ".");
+            hasError = true;
+        }
     }
 
     SetNodeType(&node, functionSymbol->type);

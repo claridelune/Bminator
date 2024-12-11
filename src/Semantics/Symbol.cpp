@@ -18,6 +18,14 @@ void FunctionSymbol::Render() const {
     std::cout << "Function Symbol: " << name << ", Return Type: " << type->GetName() << std::endl;
 }
 
+void FunctionSymbol::AddParameterType(const Symbol* type) {
+    parameterTypes.push_back(type);
+}
+
+const std::vector<const Symbol*>& FunctionSymbol::GetParameterTypes() const {
+    return parameterTypes;
+}
+
 SymbolTable::SymbolTable(const std::string& name, int level, SymbolTable* parent)
     : scopeName(name), scopeLevel(level), parentScope(parent) {}
 
